@@ -1,8 +1,19 @@
 /* === FILE: src/App.tsx === */
-/* Project: Mobogram — Phase 2 */
-/* Purpose: Demo page to verify all Phase 2 components visually */
+/* Project: Mobogram — Phase 3 */
+/* Purpose: Demo page to verify all Phase 3 components visually */
+
+import { useState } from 'react';
 
 function App() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [stickyVisible, setStickyVisible] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   return (
     <div style={{ flex: 1 }}>
       {/* Header */}
@@ -14,6 +25,9 @@ function App() {
           paddingInline: 'var(--space-6)',
           background: 'var(--color-surface)',
           boxShadow: 'var(--shadow-card)',
+          position: 'sticky',
+          insetBlockStart: 0,
+          zIndex: 'var(--z-header)',
         }}
       >
         <div className="container row row--between">
@@ -33,363 +47,328 @@ function App() {
       <main className="container" style={{ paddingBlock: 'var(--space-10)' }}>
         <div className="stack stack--loose">
 
-          {/* ===== BUTTONS ===== */}
+          {/* ===== PLACEHOLDER ===== */}
           <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>دکمه‌ها — Buttons</h2>
-            <div className="stack stack--tight">
-              <h3>Variants</h3>
-              <div className="row">
-                <button className="btn btn--primary">اصلی</button>
-                <button className="btn btn--secondary">ثانویه</button>
-                <button className="btn btn--ghost">شبح</button>
-                <button className="btn btn--danger">خطر</button>
-                <button className="btn btn--outline">خط‌دار</button>
-                <button className="btn btn--link">لینک</button>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>پلیس‌ هولدر — Placeholder</h2>
+            <div className="row" style={{ gap: 'var(--space-4)' }}>
+              <div className="aspect-square" style={{ width: '120px' }}>
+                <div className="placeholder"></div>
               </div>
+              <div className="aspect-16x9" style={{ width: '200px' }}>
+                <div className="placeholder"></div>
+              </div>
+              <div className="aspect-4x3" style={{ width: '160px' }}>
+                <div className="placeholder"></div>
+              </div>
+            </div>
 
-              <h3>Sizes</h3>
-              <div className="row">
-                <button className="btn btn--primary btn--sm">کوچک</button>
-                <button className="btn btn--primary">معمولی</button>
-                <button className="btn btn--primary btn--lg">بزرگ</button>
-              </div>
-
-              <h3>States</h3>
-              <div className="row">
-                <button className="btn btn--primary" disabled>غیرفعال</button>
-                <button className="btn btn--secondary" disabled>غیرفعال</button>
-                <button className="btn btn--primary" aria-busy="true">در حال بارگذاری</button>
-              </div>
-
-              <h3>Layout</h3>
-              <div className="row">
-                <button className="btn btn--primary btn--block">تمام عرض</button>
-              </div>
-              <div className="row">
-                <button className="btn btn--primary btn--icon" aria-label="افزودن">+</button>
-                <button className="btn btn--secondary btn--icon btn--sm" aria-label="تنظیمات">⚙</button>
-              </div>
-
-              <h3>Group</h3>
-              <div className="btn-group">
-                <button className="btn btn--secondary">چپ</button>
-                <button className="btn btn--secondary">وسط</button>
-                <button className="btn btn--secondary">راست</button>
-              </div>
-              <div className="btn-group btn-group--attached" style={{ marginBlockStart: 'var(--space-3)' }}>
-                <button className="btn btn--secondary">چپ</button>
-                <button className="btn btn--secondary">وسط</button>
-                <button className="btn btn--secondary">راست</button>
-              </div>
+            <h3 style={{ marginBlockStart: 'var(--space-6)' }}>Image Frame</h3>
+            <div className="img-frame aspect-square" style={{ maxWidth: '240px' }}>
+              <div className="placeholder"></div>
             </div>
           </section>
 
-          {/* ===== BADGES ===== */}
+          {/* ===== SKELETON ===== */}
           <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>نشان‌ها — Badges</h2>
-            <div className="row">
-              <span className="badge">۳</span>
-              <span className="badge badge--neutral">۱۲</span>
-              <span className="badge badge--success">تأیید</span>
-              <span className="badge badge--warning">هشدار</span>
-              <span className="badge badge--danger">۵</span>
-            </div>
-            <div style={{ marginBlockStart: 'var(--space-4)' }}>
-              <h3>Floating badge</h3>
-              <div style={{ position: 'relative', display: 'inline-block' }}>
-                <button className="btn btn--secondary btn--icon" aria-label="سبد خرید">
-                  🛒
-                </button>
-                <span className="badge badge--floating">۲</span>
-              </div>
-            </div>
-          </section>
-
-          {/* ===== INPUTS ===== */}
-          <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>ورودی‌ها — Inputs</h2>
-            <div className="stack stack--tight">
-              <input className="input" type="text" placeholder="ورودی عادی" />
-              <input className="input" type="text" placeholder="ورودی غیرفعال" disabled />
-              <input className="input" type="text" placeholder="ورودی نامعتبر" aria-invalid="true" />
-              <input className="input input--search" type="search" placeholder="جستجو..." />
-              <select className="input">
-                <option>انتخاب کنید</option>
-                <option>گزینه ۱</option>
-                <option>گزینه ۲</option>
-              </select>
-              <textarea className="input" placeholder="متن طولانی..." rows={3}></textarea>
-
-              <h3>Sizes</h3>
-              <input className="input input--sm" type="text" placeholder="کوچک" />
-              <input className="input input--lg" type="text" placeholder="بزرگ" />
-
-              <h3>Input with addon</h3>
-              <div className="input-wrap">
-                <span className="input-wrap__icon">🔍</span>
-                <input className="input" type="text" placeholder="جستجو با آیکون" />
-              </div>
-            </div>
-          </section>
-
-          {/* ===== FORM ===== */}
-          <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>فرم — Form</h2>
-            <form className="form" onSubmit={(e) => e.preventDefault()}>
-              <div className="form-control">
-                <label className="form-label">
-                  نام محصول
-                  <span className="form-required">*</span>
-                </label>
-                <input className="input" type="text" placeholder="نام محصول را وارد کنید" />
-                <span className="form-helper">نام محصول باید حداقل ۳ حرف باشد.</span>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>اسکلتون — Skeleton</h2>
+            <div className="row" style={{ gap: 'var(--space-5)', alignItems: 'flex-start' }}>
+              {/* Skeleton card */}
+              <div className="skeleton-card" style={{ width: '220px' }}>
+                <div className="skeleton skeleton--image"></div>
+                <div className="skeleton skeleton--title"></div>
+                <div className="skeleton skeleton--line"></div>
+                <div className="skeleton skeleton--price" style={{ height: '0.9em', width: '40%', borderRadius: 'var(--radius-xs)' }}></div>
               </div>
 
-              <div className="form-control" data-invalid="true">
-                <label className="form-label">قیمت</label>
-                <input className="input" type="text" aria-invalid="true" value="abc" readOnly />
-                <span className="form-error">قیمت باید عدد باشد.</span>
-              </div>
-
-              <fieldset className="fieldset">
-                <legend className="fieldset__legend">اطلاعات تکمیلی</legend>
-                <div className="form-control">
-                  <label className="form-label">توضیحات</label>
-                  <textarea className="input" rows={3} placeholder="توضیحات محصول..."></textarea>
+              {/* Skeleton list */}
+              <div className="skeleton-list" style={{ flex: 1, maxWidth: '400px' }}>
+                <div className="skeleton-row">
+                  <div className="skeleton skeleton--circle"></div>
+                  <div className="skeleton-row__lines">
+                    <div className="skeleton skeleton--text" style={{ width: '70%' }}></div>
+                    <div className="skeleton skeleton--text-sm" style={{ width: '50%' }}></div>
+                  </div>
                 </div>
-              </fieldset>
-
-              <div className="row">
-                <label className="check">
-                  <input type="checkbox" defaultChecked />
-                  <span>موجود است</span>
-                </label>
-                <label className="check">
-                  <input type="radio" name="brand" defaultChecked />
-                  <span>سامسونگ</span>
-                </label>
-                <label className="check">
-                  <input type="radio" name="brand" />
-                  <span>اپل</span>
-                </label>
+                <div className="skeleton-row">
+                  <div className="skeleton skeleton--circle"></div>
+                  <div className="skeleton-row__lines">
+                    <div className="skeleton skeleton--text" style={{ width: '60%' }}></div>
+                    <div className="skeleton skeleton--text-sm" style={{ width: '40%' }}></div>
+                  </div>
+                </div>
+                <div className="skeleton-row">
+                  <div className="skeleton skeleton--circle"></div>
+                  <div className="skeleton-row__lines">
+                    <div className="skeleton skeleton--text" style={{ width: '80%' }}></div>
+                    <div className="skeleton skeleton--text-sm" style={{ width: '45%' }}></div>
+                  </div>
+                </div>
               </div>
-
-              <div className="form-actions">
-                <button className="btn btn--ghost" type="button">انصراف</button>
-                <button className="btn btn--primary" type="submit">ذخیره</button>
-              </div>
-            </form>
+            </div>
           </section>
 
-          {/* ===== CHIPS ===== */}
+          {/* ===== TOAST ===== */}
           <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>تراشه‌ها — Chips</h2>
-            <div className="stack stack--tight">
-              <div className="chip-group">
-                <button className="chip" aria-pressed="true">همه</button>
-                <button className="chip">سامسونگ</button>
-                <button className="chip">اپل</button>
-                <button className="chip">شیائومی</button>
-                <button className="chip" disabled>گوگل</button>
-              </div>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>اعلان — Toast</h2>
+            <div className="row">
+              <button className="btn btn--primary" onClick={() => setToastVisible(true)}>
+                نمایش اعلان
+              </button>
+            </div>
 
-              <h3>Small chips</h3>
-              <div className="chip-group">
-                <button className="chip chip--sm" aria-pressed="true">۱۲۸GB</button>
-                <button className="chip chip--sm">۲۵۶GB</button>
-                <button className="chip chip--sm">۵۱۲GB</button>
+            {toastVisible && (
+              <div className="toast-region" style={{ position: 'relative', inset: 'auto', marginBlockStart: 'var(--space-4)' }}>
+                <div className="toast toast--success">
+                  <span className="toast__icon">✓</span>
+                  <div className="toast__body">
+                    <div className="toast__title">موفق</div>
+                    <div className="toast__message">محصول به سبد خرید اضافه شد.</div>
+                  </div>
+                  <button className="toast__close" onClick={() => setToastVisible(false)} aria-label="بستن">×</button>
+                </div>
+                <div className="toast toast--error">
+                  <span className="toast__icon">✕</span>
+                  <div className="toast__body">
+                    <div className="toast__title">خطا</div>
+                    <div className="toast__message">لطفاً دوباره تلاش کنید.</div>
+                  </div>
+                  <button className="toast__close" onClick={() => setToastVisible(false)} aria-label="بستن">×</button>
+                </div>
+                <div className="toast toast--info">
+                  <span className="toast__icon">ℹ</span>
+                  <div className="toast__body">
+                    <div className="toast__title">اطلاعات</div>
+                    <div className="toast__message">به‌روزرسانی جدید در دسترس است.</div>
+                  </div>
+                  <button className="toast__close" onClick={() => setToastVisible(false)} aria-label="بستن">×</button>
+                </div>
               </div>
+            )}
+          </section>
 
-              <h3>Removable chips</h3>
-              <div className="chip-group">
-                <span className="chip" aria-pressed="true">
-                  سامسونگ
-                  <button className="chip__remove" aria-label="حذف">×</button>
-                </span>
-                <span className="chip" aria-pressed="true">
-                  بالای ۱۰ میلیون
-                  <button className="chip__remove" aria-label="حذف">×</button>
-                </span>
+          {/* ===== MODAL ===== */}
+          <section>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>مودال — Modal</h2>
+            <button className="btn btn--primary" onClick={() => setModalOpen(true)}>
+              باز کردن مودال
+            </button>
+
+            {modalOpen && (
+              <div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+                <div className="modal__backdrop" onClick={() => setModalOpen(false)}></div>
+                <div className="modal__dialog">
+                  <div className="modal__header">
+                    <h3 className="modal__title" id="modal-title">عنوان مودال</h3>
+                    <button className="modal__close" onClick={() => setModalOpen(false)} aria-label="بستن">×</button>
+                  </div>
+                  <div className="modal__body">
+                    <p>این محتوای مودال است. می‌توانید هر اطلاعاتی را اینجا قرار دهید.</p>
+                    <p>مودال با backdrop blur و انیمیشن pop-in نمایش داده می‌شود.</p>
+                  </div>
+                  <div className="modal__footer">
+                    <button className="btn btn--ghost" onClick={() => setModalOpen(false)}>انصراف</button>
+                    <button className="btn btn--primary" onClick={() => setModalOpen(false)}>تأیید</button>
+                  </div>
+                </div>
               </div>
+            )}
+          </section>
 
-              <h3>Scrollable chip group</h3>
-              <div className="chip-group chip-group--scroll">
-                {['سامسونگ', 'اپل', 'شیائومی', 'گوگل', 'هواوی', 'وان‌پلاس', 'نوکیا', 'سونی'].map((brand) => (
-                  <button className="chip" key={brand}>{brand}</button>
+          {/* ===== DROPDOWN ===== */}
+          <section>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>دراپ‌داون — Dropdown</h2>
+            <div className="dropdown">
+              <button
+                className="dropdown__trigger"
+                aria-expanded={dropdownOpen}
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                <span>مرتب‌سازی</span>
+                <span className="dropdown__caret"></span>
+              </button>
+              <div className="dropdown__menu" data-open={dropdownOpen ? "true" : "false"}>
+                <button className="dropdown__item" aria-checked="true">جدیدترین</button>
+                <button className="dropdown__item">ارزان‌ترین</button>
+                <button className="dropdown__item">گران‌ترین</button>
+                <div className="dropdown__separator"></div>
+                <button className="dropdown__item">پرفروش‌ترین</button>
+                <button className="dropdown__item" disabled>محبوب‌ترین</button>
+              </div>
+            </div>
+          </section>
+
+          {/* ===== TOOLTIP ===== */}
+          <section>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>تولتیپ — Tooltip</h2>
+            <div className="row" style={{ gap: 'var(--space-6)' }}>
+              <div className="tooltip" tabIndex={0}>
+                <button className="btn btn--secondary">بالا (پیش‌فرض)</button>
+                <div className="tooltip__bubble">این یک تولتیپ است</div>
+              </div>
+              <div className="tooltip tooltip--bottom" tabIndex={0}>
+                <button className="btn btn--secondary">پایین</button>
+                <div className="tooltip__bubble">تولتیپ پایین</div>
+              </div>
+            </div>
+          </section>
+
+          {/* ===== GALLERY ===== */}
+          <section>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>گالری — Gallery</h2>
+            <div className="gallery" style={{ maxWidth: '480px' }}>
+              <div className="gallery__stage">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className={`gallery__slide ${galleryIndex === i ? 'is-active' : ''}`}>
+                    <div className="placeholder"></div>
+                  </div>
+                ))}
+                <button
+                  className="gallery__nav gallery__nav--prev"
+                  onClick={() => setGalleryIndex((galleryIndex - 1 + 3) % 3)}
+                  aria-label="قبلی"
+                >
+                  ‹
+                </button>
+                <button
+                  className="gallery__nav gallery__nav--next"
+                  onClick={() => setGalleryIndex((galleryIndex + 1) % 3)}
+                  aria-label="بعدی"
+                >
+                  ›
+                </button>
+                <div className="gallery__counter">{galleryIndex + 1} / 3</div>
+              </div>
+              <div className="gallery__thumbs">
+                {[0, 1, 2].map((i) => (
+                  <button
+                    key={i}
+                    className={`gallery__thumb ${galleryIndex === i ? 'is-active' : ''}`}
+                    onClick={() => setGalleryIndex(i)}
+                    aria-label={`تصویر ${i + 1}`}
+                  >
+                    <div className="placeholder"></div>
+                  </button>
                 ))}
               </div>
             </div>
           </section>
 
-          {/* ===== RATING ===== */}
+          {/* ===== BLUR-UP IMAGE ===== */}
           <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>امتیاز — Rating</h2>
-            <div className="stack stack--tight">
-              <div className="rating">
-                <div className="rating__stars">
-                  <span className="rating__star"></span>
-                  <span className="rating__star"></span>
-                  <span className="rating__star"></span>
-                  <span className="rating__star"></span>
-                  <span className="rating__star rating__star--half"></span>
-                </div>
-                <span className="rating__value">۴.۵</span>
-                <span className="rating__count">(۱۲۸ نظر)</span>
-              </div>
-
-              <div className="rating rating--sm">
-                <div className="rating__stars">
-                  <span className="rating__star"></span>
-                  <span className="rating__star"></span>
-                  <span className="rating__star"></span>
-                  <span className="rating__star rating__star--empty"></span>
-                  <span className="rating__star rating__star--empty"></span>
-                </div>
-                <span className="rating__value">۳.۰</span>
-              </div>
-
-              <div className="rating rating--lg">
-                <div className="rating__stars">
-                  <span className="rating__star"></span>
-                  <span className="rating__star"></span>
-                  <span className="rating__star"></span>
-                  <span className="rating__star"></span>
-                  <span className="rating__star"></span>
-                </div>
-                <span className="rating__value">۵.۰</span>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>تصویر بلور-آپ — Blur-up Image</h2>
+            <div className="img-blur aspect-square" style={{ maxWidth: '240px', borderRadius: 'var(--radius-lg)' }}>
+              <div className="img-blur__blur" style={{ background: 'linear-gradient(135deg, #C8CEDF 0%, #E4E6EE 100%)' }}></div>
+              <div className={`img-blur__full ${imageLoaded ? '' : ''}`} style={{ background: 'var(--color-surface-3)' }}>
+                <div className="placeholder"></div>
               </div>
             </div>
+            <button
+              className="btn btn--secondary"
+              style={{ marginBlockStart: 'var(--space-3)' }}
+              onClick={() => setImageLoaded(!imageLoaded)}
+            >
+              {imageLoaded ? 'بازنشانی' : 'شبیه‌سازی بارگذاری'}
+            </button>
           </section>
 
-          {/* ===== TABLE ===== */}
+          {/* ===== DRAWER ===== */}
           <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>جدول — Table</h2>
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>محصول</th>
-                    <th>برند</th>
-                    <th>قیمت</th>
-                    <th>وضعیت</th>
-                    <th>عملیات</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <div className="row">
-                        <div className="table__thumb"></div>
-                        <span>Galaxy S24 Ultra</span>
-                      </div>
-                    </td>
-                    <td>سامسونگ</td>
-                    <td>۵۲,۰۰۰,۰۰۰ تومان</td>
-                    <td><span className="badge badge--success">موجود</span></td>
-                    <td>
-                      <div className="table__actions">
-                        <button className="btn btn--ghost btn--sm">ویرایش</button>
-                        <button className="btn btn--danger btn--sm">حذف</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div className="row">
-                        <div className="table__thumb"></div>
-                        <span>iPhone 15 Pro</span>
-                      </div>
-                    </td>
-                    <td>اپل</td>
-                    <td>۶۸,۰۰۰,۰۰۰ تومان</td>
-                    <td><span className="badge badge--success">موجود</span></td>
-                    <td>
-                      <div className="table__actions">
-                        <button className="btn btn--ghost btn--sm">ویرایش</button>
-                        <button className="btn btn--danger btn--sm">حذف</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div className="row">
-                        <div className="table__thumb"></div>
-                        <span>Xiaomi 14</span>
-                      </div>
-                    </td>
-                    <td>شیائومی</td>
-                    <td>۲۸,۰۰۰,۰۰۰ تومان</td>
-                    <td><span className="badge badge--warning">کم</span></td>
-                    <td>
-                      <div className="table__actions">
-                        <button className="btn btn--ghost btn--sm">ویرایش</button>
-                        <button className="btn btn--danger btn--sm">حذف</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div className="row">
-                        <div className="table__thumb"></div>
-                        <span>Pixel 8 Pro</span>
-                      </div>
-                    </td>
-                    <td>گوگل</td>
-                    <td>۴۵,۰۰۰,۰۰۰ تومان</td>
-                    <td><span className="badge badge--danger">ناموجود</span></td>
-                    <td>
-                      <div className="table__actions">
-                        <button className="btn btn--ghost btn--sm">ویرایش</button>
-                        <button className="btn btn--danger btn--sm">حذف</button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>دراور — Drawer</h2>
+            <button className="btn btn--primary" onClick={() => setDrawerOpen(true)}>
+              باز کردن دراور
+            </button>
 
-            <h3 style={{ marginBlockStart: 'var(--space-6)' }}>Compact table</h3>
-            <div className="table-wrap">
-              <table className="table table--compact">
-                <thead>
-                  <tr>
-                    <th>ردیف</th>
-                    <th>عنوان</th>
-                    <th>مقدار</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr><td>۱</td><td>گوشی سامسونگ</td><td>۱۵</td></tr>
-                  <tr><td>۲</td><td>گوشی اپل</td><td>۸</td></tr>
-                  <tr><td>۳</td><td>گوشی شیائومی</td><td>۲۲</td></tr>
-                </tbody>
-              </table>
-            </div>
+            {drawerOpen && (
+              <div className="drawer" role="dialog" aria-modal="true">
+                <div className="drawer__backdrop" onClick={() => setDrawerOpen(false)}></div>
+                <div className="drawer__panel">
+                  <div className="drawer__header">
+                    <h3 className="drawer__title">سبد خرید</h3>
+                    <button className="drawer__close" onClick={() => setDrawerOpen(false)} aria-label="بستن">×</button>
+                  </div>
+                  <div className="drawer__body">
+                    <div className="drawer__empty">
+                      <p>سبد خرید شما خالی است.</p>
+                    </div>
+                  </div>
+                  <div className="drawer__footer">
+                    <button className="btn btn--primary btn--block">تکمیل خرید</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
 
-            <h3 style={{ marginBlockStart: 'var(--space-6)' }}>Empty table</h3>
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>محصول</th>
-                    <th>قیمت</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colSpan={2}>
-                      <div className="table__empty">
-                        <p>هیچ محصولی یافت نشد.</p>
+          {/* ===== BOTTOM SHEET ===== */}
+          <section>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>باتم شیت — Bottom Sheet</h2>
+            <p className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>
+              (فقط در موبایل نمایش داده می‌شود — در دسکتاپ مخفی است)
+            </p>
+            <button className="btn btn--primary" onClick={() => setSheetOpen(true)}>
+              باز کردن شیت
+            </button>
+
+            {sheetOpen && (
+              <div className="sheet" role="dialog" aria-modal="true">
+                <div className="sheet__backdrop" onClick={() => setSheetOpen(false)}></div>
+                <div className="sheet__panel">
+                  <div className="sheet__handle"></div>
+                  <div className="sheet__header">
+                    <h3 className="sheet__title">فیلترها</h3>
+                    <button className="drawer__close" onClick={() => setSheetOpen(false)} aria-label="بستن">×</button>
+                  </div>
+                  <div className="sheet__body">
+                    <div className="stack">
+                      <div className="form-control">
+                        <label className="form-label">برند</label>
+                        <div className="chip-group">
+                          <button className="chip" aria-pressed="true">همه</button>
+                          <button className="chip">سامسونگ</button>
+                          <button className="chip">اپل</button>
+                          <button className="chip">شیائومی</button>
+                        </div>
                       </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                      <div className="form-control">
+                        <label className="form-label">محدوده قیمت</label>
+                        <input className="input" type="text" placeholder="حداقل قیمت" />
+                        <input className="input" type="text" placeholder="حداکثر قیمت" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="sheet__footer">
+                    <button className="btn btn--ghost" onClick={() => setSheetOpen(false)}>بازنشانی</button>
+                    <button className="btn btn--primary" onClick={() => setSheetOpen(false)}>اعمال</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* ===== STICKY BAR ===== */}
+          <section>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>نوار چسبان — Sticky Bar</h2>
+            <p className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>
+              (فقط در موبایل نمایش داده می‌شود)
+            </p>
+            <button className="btn btn--primary" onClick={() => setStickyVisible(!stickyVisible)}>
+              {stickyVisible ? 'مخفی کردن' : 'نمایش'} نوار چسبان
+            </button>
           </section>
 
         </div>
       </main>
+
+      {/* Sticky Bar */}
+      <div className={`sticky-bar ${stickyVisible ? 'is-visible' : ''}`}>
+        <div className="sticky-bar__info">
+          <span className="sticky-bar__label">قیمت</span>
+          <span className="sticky-bar__price">۵۲,۰۰۰,۰۰۰ تومان</span>
+        </div>
+        <div className="sticky-bar__actions">
+          <button className="btn btn--primary">افزودن به سبد</button>
+        </div>
+      </div>
 
       {/* Footer */}
       <footer
@@ -401,7 +380,7 @@ function App() {
         }}
       >
         <div className="container">
-          <p>موبوگرام — فاز ۲: کامپوننت‌های اصلی</p>
+          <p>موبوگرام — فاز ۳: کامپوننت‌های پیشرفته</p>
         </div>
       </footer>
     </div>

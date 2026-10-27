@@ -1,0 +1,646 @@
+/* === FILE: styles/advanced.css === */
+/* Project: Mobogram — Phase 3: Advanced UI */
+/* Purpose: Gallery, blur-up image, drawer, bottom sheet, sticky bar */
+
+/* ============================================================
+   SECTION 1: Blur-up Image Loading
+   ============================================================ */
+
+/* --- Base --- */
+
+.img-blur {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-surface-2);
+  border-radius: inherit;
+}
+
+/* --- Blurred placeholder --- */
+
+.img-blur__blur {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(14px);
+  transform: scale(1.06);
+  opacity: 1;
+  transition: opacity var(--duration-slow) var(--ease-out-soft);
+}
+
+/* --- Full image --- */
+
+.img-blur__full {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity var(--duration-slow) var(--ease-out-soft);
+}
+
+/* --- Loaded state --- */
+
+.img-blur.is-loaded .img-blur__blur {
+  opacity: 0;
+}
+
+.img-blur.is-loaded .img-blur__full {
+  opacity: 1;
+}
+
+/* --- Placeholder fallback --- */
+
+.img-blur > .placeholder {
+  position: absolute;
+  inset: 0;
+}
+
+/* --- Reduced motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+  .img-blur__blur,
+  .img-blur__full {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   SECTION 2: Gallery (product image viewer with zoom + thumbnails)
+   ============================================================ */
+
+/* --- Base --- */
+
+.gallery {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* --- Stage --- */
+
+.gallery__stage {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  background: var(--color-surface-2);
+  box-shadow: var(--shadow-card);
+  touch-action: pan-y;
+}
+
+/* --- Slides --- */
+
+.gallery__slide {
+  position: absolute;
+  inset: 0;
+  display: none;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out-soft);
+}
+
+.gallery__slide.is-active {
+  display: block;
+  opacity: 1;
+}
+
+.gallery__slide img,
+.gallery__slide .placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* --- Zoom on hover (desktop, non-touch) --- */
+
+@media (hover: hover) and (pointer: fine) {
+  .gallery__slide.is-active img {
+    transition: transform var(--duration-slow) var(--ease-out-soft);
+  }
+
+  .gallery__stage:hover .gallery__slide.is-active img {
+    transform: scale(1.12);
+  }
+}
+
+/* --- Navigation arrows --- */
+
+.gallery__nav {
+  position: absolute;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(250, 250, 250, 0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  box-shadow: var(--shadow-key);
+  border: 0;
+  cursor: pointer;
+  z-index: 2;
+  transition:
+    background-color var(--duration-fast) var(--ease-out-soft),
+    transform        var(--duration-fast) var(--ease-out-soft);
+  opacity: 0;
+}
+
+.gallery__stage:hover .gallery__nav,
+.gallery__stage:focus-within .gallery__nav {
+  opacity: 1;
+}
+
+.gallery__nav:hover {
+  background: var(--color-surface);
+  transform: translateY(-50%) scale(1.06);
+}
+
+.gallery__nav:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.gallery__nav--prev {
+  inset-inline-start: var(--space-3);
+}
+
+.gallery__nav--next {
+  inset-inline-end: var(--space-3);
+}
+
+.gallery__nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* --- Mobile: always show nav --- */
+
+@media (max-width: 767px) {
+  .gallery__nav {
+    opacity: 1;
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* --- Slide counter --- */
+
+.gallery__counter {
+  position: absolute;
+  inset-block-end: var(--space-3);
+  inset-inline-end: var(--space-3);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3);
+  background: rgba(48, 45, 67, 0.7);
+  color: var(--color-surface);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(4px);
+}
+
+/* --- Thumbnail strip --- */
+
+.gallery__thumbs {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-block-end: var(--space-1);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gallery__thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.gallery__thumb {
+  flex: 0 0 72px;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface-2);
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    border-color var(--duration-fast) var(--ease-out-soft),
+    transform    var(--duration-fast) var(--ease-out-soft);
+}
+
+.gallery__thumb img,
+.gallery__thumb .placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery__thumb:hover {
+  transform: translateY(-2px);
+}
+
+.gallery__thumb.is-active {
+  border-color: var(--color-accent);
+}
+
+.gallery__thumb:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@media (max-width: 479px) {
+  .gallery__thumb {
+    flex-basis: 60px;
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* --- Reduced motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery__slide {
+    transition: none;
+  }
+
+  .gallery__thumb {
+    transition: none;
+  }
+
+  .gallery__nav {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   SECTION 3: Drawer (side panel — cart, filters)
+   ============================================================ */
+
+/* --- Animations --- */
+
+@keyframes drawer-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes drawer-slide {
+  from { transform: translateX(var(--drawer-from)); }
+  to   { transform: translateX(0); }
+}
+
+/* --- Direction tokens --- */
+
+[dir="rtl"] {
+  --drawer-from: -100%;
+}
+
+[dir="ltr"] {
+  --drawer-from: 100%;
+}
+
+/* --- Base --- */
+
+.drawer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-drawer);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drawer[hidden] {
+  display: none;
+}
+
+/* --- Backdrop --- */
+
+.drawer__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(48, 45, 67, 0.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: drawer-fade var(--duration-normal) var(--ease-out-soft) both;
+}
+
+/* --- Panel --- */
+
+.drawer__panel {
+  position: relative;
+  width: min(440px, 100vw);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-floating);
+  animation: drawer-slide var(--duration-normal) var(--ease-out-soft) both;
+  overflow: hidden;
+}
+
+/* --- Header --- */
+
+.drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-5);
+  padding-inline: var(--space-5);
+  border-block-end: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.drawer__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.drawer__close {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+}
+
+.drawer__close:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.drawer__close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* --- Body --- */
+
+.drawer__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding-block: var(--space-4);
+  padding-inline: var(--space-5);
+}
+
+/* --- Footer --- */
+
+.drawer__footer {
+  flex-shrink: 0;
+  padding-block: var(--space-4);
+  padding-inline: var(--space-5);
+  border-block-start: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* --- Empty state --- */
+
+.drawer__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding-block: var(--space-16);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* --- Reduced motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer__backdrop,
+  .drawer__panel {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   SECTION 4: Bottom Sheet (mobile filter panel, sort, etc.)
+   ============================================================ */
+
+/* --- Animations --- */
+
+@keyframes sheet-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* --- Base --- */
+
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-drawer);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet[hidden] {
+  display: none;
+}
+
+/* --- Backdrop --- */
+
+.sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(48, 45, 67, 0.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: drawer-fade var(--duration-normal) var(--ease-out-soft) both;
+}
+
+/* --- Panel --- */
+
+.sheet__panel {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  max-height: 85dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-start-start-radius: var(--radius-2xl);
+  border-start-end-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-floating);
+  animation: sheet-slide-up var(--duration-normal) var(--ease-out-soft) both;
+  overflow: hidden;
+  padding-block-end: env(safe-area-inset-bottom, 0);
+}
+
+/* --- Handle --- */
+
+.sheet__handle {
+  align-self: center;
+  width: 40px;
+  height: 4px;
+  margin-block-start: var(--space-3);
+  margin-block-end: var(--space-2);
+  background: var(--color-border-strong);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+/* --- Header --- */
+
+.sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-5);
+  border-block-end: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.sheet__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+/* --- Body --- */
+
+.sheet__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding-block: var(--space-4);
+  padding-inline: var(--space-5);
+}
+
+/* --- Footer --- */
+
+.sheet__footer {
+  flex-shrink: 0;
+  display: flex;
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+  padding-inline: var(--space-5);
+  border-block-start: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.sheet__footer .btn {
+  flex: 1 1 0;
+}
+
+/* --- Desktop: hidden (use drawer instead) --- */
+
+@media (min-width: 768px) {
+  .sheet {
+    display: none !important;
+  }
+}
+
+/* --- Reduced motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet__backdrop,
+  .sheet__panel {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   SECTION 5: Sticky Purchase Bar (product page, mobile)
+   ============================================================ */
+
+/* --- Base --- */
+
+.sticky-bar {
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  padding-block-end: calc(var(--space-3) + env(safe-area-inset-bottom, 0));
+  background: var(--color-surface);
+  box-shadow:
+    0 -4px 16px -6px rgba(48, 45, 67, 0.10),
+    0 -1px 0 var(--color-border);
+  transform: translateY(100%);
+  transition: transform var(--duration-normal) var(--ease-out-soft);
+}
+
+.sticky-bar.is-visible {
+  transform: translateY(0);
+}
+
+/* --- Info --- */
+
+.sticky-bar__info {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sticky-bar__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.sticky-bar__price {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+}
+
+/* --- Actions --- */
+
+.sticky-bar__actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* --- Desktop: hidden --- */
+
+@media (min-width: 1024px) {
+  .sticky-bar {
+    display: none;
+  }
+}
+
+/* --- Body offset when sticky bar is present --- */
+
+body.has-sticky-bar {
+  padding-block-end: 88px;
+}
+
+/* --- Reduced motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+  .sticky-bar {
+    transition: none;
+  }
+}
