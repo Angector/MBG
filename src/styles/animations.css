@@ -1,0 +1,472 @@
+/* === FILE: styles/animations.css === */
+/* Project: Mobogram — Phase 4: CSS Motion System */
+/* Purpose: Centralized keyframes, scroll-reveal, reduced-motion fallbacks */
+
+/* =============================================================================
+   SECTION 1: FOUNDATION
+   ============================================================================= */
+
+/* 1.2 Scroll-reveal utility — JS toggles .is-revealed when element enters viewport */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity    var(--duration-slow) var(--ease-out-soft),
+    transform  var(--duration-slow) var(--ease-out-soft);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+  will-change: auto;
+}
+
+/* Reveal variants */
+.reveal--fade {
+  transform: none;
+}
+
+.reveal--up {
+  transform: translateY(16px);
+}
+
+.reveal--down {
+  transform: translateY(-16px);
+}
+
+.reveal--left {
+  transform: translateX(16px);
+}
+
+.reveal--right {
+  transform: translateX(-16px);
+}
+
+.reveal--scale {
+  transform: translateY(16px) scale(0.96);
+}
+
+/* RTL overrides for directional reveals */
+[dir="rtl"] .reveal--left {
+  transform: translateX(-16px);
+}
+
+[dir="rtl"] .reveal--right {
+  transform: translateX(16px);
+}
+
+/* 1.3 Stagger helper — JS sets --stagger-index on each child */
+.stagger > * {
+  --reveal-delay: calc(var(--stagger-index, 0) * var(--stagger-step, 60ms));
+}
+
+/* =============================================================================
+   SECTION 2: BUTTON / CARD / CHIP MICRO-INTERACTIONS
+   ============================================================================= */
+
+/* 2.1 Press ripple — used by JS by adding .is-pressing briefly */
+@keyframes ripple-out {
+  from { transform: scale(0); opacity: 0.5 }
+  to   { transform: scale(2.4); opacity: 0 }
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: currentColor;
+  pointer-events: none;
+  animation: ripple-out var(--duration-slow) var(--ease-out-soft) forwards;
+}
+
+/* 2.2 Success checkmark flash — used after form submit success */
+@keyframes success-flash {
+  0%   { box-shadow: 0 0 0 0 var(--color-success-soft) }
+  60%  { box-shadow: 0 0 0 8px var(--color-success-soft) }
+  100% { box-shadow: 0 0 0 0 var(--color-success-soft) }
+}
+
+.flash-success {
+  animation: success-flash var(--duration-slow) var(--ease-out-soft);
+}
+
+@keyframes flash-error {
+  0%, 100% { box-shadow: 0 0 0 0 var(--color-danger-soft) }
+  50%      { box-shadow: 0 0 0 6px var(--color-danger-soft) }
+}
+
+.flash-error {
+  animation: flash-error var(--duration-slow) var(--ease-out-soft);
+}
+
+/* 2.3 Heart pop for wishlist toggle — used by JS */
+@keyframes heart-pop {
+  0%   { transform: scale(1) }
+  40%  { transform: scale(1.35) }
+  70%  { transform: scale(0.92) }
+  100% { transform: scale(1) }
+}
+
+.heart-pop {
+  animation: heart-pop var(--duration-normal) var(--ease-spring);
+}
+
+/* 2.4 Shake for invalid fields */
+@keyframes shake {
+  0%, 100% { transform: translateX(0) }
+  20%      { transform: translateX(-6px) }
+  40%      { transform: translateX(5px) }
+  60%      { transform: translateX(-3px) }
+  80%      { transform: translateX(2px) }
+}
+
+.shake {
+  animation: shake var(--duration-slow) var(--ease-in-out-soft);
+}
+
+/* =============================================================================
+   SECTION 3: FLY-TO-CART
+   ============================================================================= */
+
+/* Used by motion.js when a product is added to cart */
+@keyframes fly-arc {
+  0%   { transform: scale(1) translateZ(0) }
+  40%  { transform: scale(0.85) translateY(-30%) }
+  100% { transform: scale(0.2) translateY(0) }
+}
+
+.fly-item {
+  position: fixed;
+  z-index: var(--z-toast);
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  pointer-events: none;
+  box-shadow: var(--shadow-floating);
+  background: var(--color-surface);
+  animation: fly-arc var(--duration-slower) var(--ease-in-out-soft) forwards;
+  transform-origin: center;
+}
+
+.fly-item img,
+.fly-item .placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Cart icon pulse when the fly item lands — JS adds .is-pulsing */
+@keyframes cart-pulse {
+  0%, 100% { transform: scale(1) }
+  50%      { transform: scale(1.18) }
+}
+
+.cart-pulse {
+  animation: cart-pulse var(--duration-normal) var(--ease-spring);
+}
+
+/* =============================================================================
+   SECTION 4: COUNTER (numeric count-up)
+   ============================================================================= */
+
+/* 4.1 Simple opacity flicker — used when digit changes by large jump */
+@keyframes digit-tick {
+  0%   { opacity: 0.4 }
+  100% { opacity: 1 }
+}
+
+.digit-tick {
+  animation: digit-tick var(--duration-fast) var(--ease-out-soft);
+}
+
+/* 4.2 Class to highlight an increment */
+@keyframes increment-glow {
+  0%   { background: var(--color-success-soft) }
+  100% { background: transparent }
+}
+
+.increment-glow {
+  animation: increment-glow var(--duration-slow) var(--ease-out-soft);
+}
+
+/* =============================================================================
+   SECTION 5: LOADING & FEEDBACK
+   ============================================================================= */
+
+/* 5.1 Spinner — standalone spinner element (button spinner is in components.css) */
+@keyframes spin {
+  to { transform: rotate(360deg) }
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: spin 0.7s linear infinite;
+}
+
+.spinner--lg {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+/* 5.2 Progress bar indeterminate — for long async ops */
+@keyframes progress-slide {
+  0%   { transform: translateX(-100%) }
+  100% { transform: translateX(250%) }
+}
+
+.progress-indeterminate {
+  position: relative;
+  height: 3px;
+  overflow: hidden;
+  background: var(--color-surface-3);
+  border-radius: var(--radius-full);
+}
+
+.progress-indeterminate::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 40%;
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  animation: progress-slide 1.4s var(--ease-in-out-soft) infinite;
+}
+
+/* 5.3 Page-load fade-in — used after hydration in each page */
+@keyframes page-in {
+  from { opacity: 0 }
+  to   { opacity: 1 }
+}
+
+.page-enter {
+  animation: page-in var(--duration-normal) var(--ease-out-soft) both;
+}
+
+/* =============================================================================
+   SECTION 6: SCROLL & NAVIGATION
+   ============================================================================= */
+
+/* 6.1 Header shrink on scroll — JS toggles .is-scrolled on <header> */
+.site-header {
+  transition:
+    background-color var(--duration-fast) var(--ease-out-soft),
+    box-shadow       var(--duration-fast) var(--ease-out-soft),
+    height           var(--duration-fast) var(--ease-out-soft);
+}
+
+.site-header.is-scrolled {
+  box-shadow: var(--shadow-key);
+}
+
+/* 6.2 Back-to-top button — JS toggles .is-visible */
+@keyframes btt-in {
+  from { opacity: 0; transform: translateY(8px) }
+  to   { opacity: 1; transform: translateY(0) }
+}
+
+.back-to-top {
+  position: fixed;
+  inset-block-end: var(--space-6);
+  inset-inline-end: var(--space-6);
+  z-index: var(--z-sticky);
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-floating);
+  border: 0;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity    var(--duration-fast) var(--ease-out-soft),
+    visibility var(--duration-fast) var(--ease-out-soft);
+}
+
+.back-to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  animation: btt-in var(--duration-normal) var(--ease-out-soft) both;
+}
+
+@media (max-width: 767px) {
+  .back-to-top {
+    inset-block-end: calc(var(--space-4) + env(safe-area-inset-bottom, 0));
+    inset-inline-end: var(--space-4);
+  }
+}
+
+/* =============================================================================
+   SECTION 7: EMPTY & ERROR STATES
+   ============================================================================= */
+
+/* 7.1 Gentle float for decorative SVGs in empty states */
+@keyframes empty-float {
+  0%, 100% { transform: translateY(0) }
+  50%      { transform: translateY(-6px) }
+}
+
+.empty-float {
+  animation: empty-float 3s var(--ease-in-out-soft) infinite;
+}
+
+/* 7.2 Attention bob for error state icons */
+@keyframes error-bob {
+  0%, 100% { transform: translateX(0) }
+  25%      { transform: translateX(-2px) }
+  75%      { transform: translateX(2px) }
+}
+
+.error-bob {
+  animation: error-bob var(--duration-slow) var(--ease-in-out-soft);
+}
+
+/* =============================================================================
+   SECTION 8: SKELETON & SHIMMER
+   ============================================================================= */
+
+/* Skeleton shimmer lives in components.css (Section 9). This file only provides
+   the delay helper to stagger a set of skeletons */
+.skeleton-stagger > .skeleton:nth-child(1) { animation-delay: 0ms }
+.skeleton-stagger > .skeleton:nth-child(2) { animation-delay: 120ms }
+.skeleton-stagger > .skeleton:nth-child(3) { animation-delay: 240ms }
+.skeleton-stagger > .skeleton:nth-child(4) { animation-delay: 360ms }
+.skeleton-stagger > .skeleton:nth-child(5) { animation-delay: 480ms }
+.skeleton-stagger > .skeleton:nth-child(6) { animation-delay: 600ms }
+
+/* =============================================================================
+   SECTION 9: MODAL / DRAWER / SHEET / TOAST — HELPER CLASSES ONLY
+   ============================================================================= */
+
+/* .is-opening — hint for JS to read lifecycle; no CSS effect in default state */
+
+/* Toast dismiss — JS should add .toast--leaving class and then remove the element
+   after the animation ends (use animationend event). The keyframe is in
+   components.css. */
+
+/* Drawer open/close via attribute is handled in advanced.css. */
+
+/* =============================================================================
+   SECTION 10: SKIP-LINK (accessibility)
+   ============================================================================= */
+
+/* Accessible skip-to-content link that reveals on focus */
+.skip-link {
+  position: absolute;
+  inset-block-start: -100px;
+  inset-inline-start: var(--space-4);
+  z-index: var(--z-modal);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-4);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  border-radius: var(--radius-md);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: inset-block-start var(--duration-fast) var(--ease-out-soft);
+}
+
+.skip-link:focus-visible {
+  inset-block-start: var(--space-4);
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* =============================================================================
+   SECTION 11: REDUCED MOTION — COMPREHENSIVE
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  /* Reveal becomes instant */
+  .reveal,
+  .reveal--fade,
+  .reveal--up,
+  .reveal--down,
+  .reveal--left,
+  .reveal--right,
+  .reveal--scale {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+
+  /* Kill all decorative keyframes */
+  .ripple,
+  .flash-success,
+  .flash-error,
+  .heart-pop,
+  .shake,
+  .fly-item,
+  .cart-pulse,
+  .digit-tick,
+  .increment-glow,
+  .page-enter,
+  .back-to-top.is-visible,
+  .empty-float,
+  .error-bob,
+  .spinner,
+  .progress-indeterminate::after {
+    animation: none !important;
+  }
+
+  /* Spinner still needs to signal "loading" without spinning:
+     show a static ring instead */
+  .spinner {
+    border-top-color: currentColor;
+    border-inline-end-color: transparent;
+  }
+
+  /* Progress indicator becomes a static bar */
+  .progress-indeterminate::after {
+    width: 100%;
+    transform: none;
+  }
+
+  /* Fly-to-cart is skipped — JS should check prefers-reduced-motion and
+     simply pulse the cart icon instead. This CSS support prevents the
+     flying element from appearing */
+  .fly-item {
+    display: none !important;
+  }
+
+  /* Skeleton shimmer stops */
+  .skeleton {
+    animation: none !important;
+    background-image: none;
+  }
+
+  /* Stagger delays zeroed */
+  .stagger > * {
+    --reveal-delay: 0ms !important;
+  }
+
+  /* Header and back-to-top use transitions, not animations */
+  .site-header,
+  .back-to-top,
+  .skip-link {
+    transition: none;
+  }
+
+  /* Any component with transition-delay set inline or via class */
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}

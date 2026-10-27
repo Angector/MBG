@@ -1,5 +1,5 @@
 /* === FILE: src/index.css === */
-/* Project: Mobogram — Phase 3 */
+/* Project: Mobogram — Phase 4 */
 /* Purpose: Entry point that imports all stylesheets in cascade order */
 
 @import "tailwindcss";
@@ -8,3 +8,4 @@
 @import "./styles/base.css";
 @import "./styles/components.css";
 @import "./styles/advanced.css";
+@import "./styles/animations.css";

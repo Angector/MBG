@@ -1,30 +1,51 @@
 /* === FILE: src/App.tsx === */
-/* Project: Mobogram — Phase 3 */
-/* Purpose: Demo page to verify all Phase 3 components visually */
+/* Project: Mobogram — Phase 4 */
+/* Purpose: Demo page to verify all Phase 4 animations visually */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function App() {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [toastVisible, setToastVisible] = useState(false);
-  const [stickyVisible, setStickyVisible] = useState(false);
-  const [galleryIndex, setGalleryIndex] = useState(0);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const [showReveal, setShowReveal] = useState(false);
+  const [showShake, setShowShake] = useState(false);
+  const [showHeartPop, setShowHeartPop] = useState(false);
+  const [showFlashSuccess, setShowFlashSuccess] = useState(false);
+  const [showFlashError, setShowFlashError] = useState(false);
+  const [showFlyItem, setShowFlyItem] = useState(false);
+  const [showCartPulse, setShowCartPulse] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const triggerAnimation = (setter: (v: boolean) => void, duration = 1000) => {
+    setter(true);
+    setTimeout(() => setter(false), duration);
+  };
 
   return (
     <div style={{ flex: 1 }}>
-      {/* Header */}
+      {/* Skip link for accessibility */}
+      <a href="#main-content" className="skip-link">
+        پرش به محتوای اصلی
+      </a>
+
+      {/* Header with scroll effect */}
       <header
+        className={`site-header ${isScrolled ? 'is-scrolled' : ''}`}
         style={{
           height: 'var(--header-height)',
           display: 'flex',
           alignItems: 'center',
           paddingInline: 'var(--space-6)',
           background: 'var(--color-surface)',
-          boxShadow: 'var(--shadow-card)',
           position: 'sticky',
           insetBlockStart: 0,
           zIndex: 'var(--z-header)',
@@ -38,337 +59,233 @@ function App() {
             <ul className="row">
               <li><a href="#" style={{ fontSize: 'var(--text-sm)' }}>خانه</a></li>
               <li><a href="#" style={{ fontSize: 'var(--text-sm)' }}>محصولات</a></li>
+              <li><a href="#" style={{ fontSize: 'var(--text-sm)' }}>تماس</a></li>
             </ul>
           </nav>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="container" style={{ paddingBlock: 'var(--space-10)' }}>
+      <main id="main-content" className="container" style={{ paddingBlock: 'var(--space-10)' }}>
         <div className="stack stack--loose">
 
-          {/* ===== PLACEHOLDER ===== */}
+          {/* ===== SCROLL REVEAL ===== */}
           <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>پلیس‌ هولدر — Placeholder</h2>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>اسکرول ریویل — Scroll Reveal</h2>
+            <p className="text-muted" style={{ fontSize: 'var(--text-sm)', marginBlockEnd: 'var(--space-4)' }}>
+              اسکرول کنید تا المان‌ها با انیمیشن ظاهر شوند
+            </p>
+            <button className="btn btn--primary" onClick={() => setShowReveal(!showReveal)}>
+              {showReveal ? 'مخفی کردن' : 'نمایش'} المان‌های ریویل
+            </button>
+
+            {showReveal && (
+              <div className="stagger" style={{ marginBlockStart: 'var(--space-4)', '--stagger-step': '100ms' } as React.CSSProperties}>
+                <div className="reveal reveal--up is-revealed" style={{ '--stagger-index': 0 } as React.CSSProperties}>
+                  <div className="row">
+                    <div className="badge badge--success">۱</div>
+                    <span>ریویل از پایین</span>
+                  </div>
+                </div>
+                <div className="reveal reveal--fade is-revealed" style={{ '--stagger-index': 1 } as React.CSSProperties}>
+                  <div className="row">
+                    <div className="badge badge--info">۲</div>
+                    <span>ریویل فید</span>
+                  </div>
+                </div>
+                <div className="reveal reveal--scale is-revealed" style={{ '--stagger-index': 2 } as React.CSSProperties}>
+                  <div className="row">
+                    <div className="badge badge--warning">۳</div>
+                    <span>ریویل با اسکیل</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* ===== MICRO-INTERACTIONS ===== */}
+          <section>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>میکرو-اینتراکشن‌ها — Micro-Interactions</h2>
             <div className="row" style={{ gap: 'var(--space-4)' }}>
-              <div className="aspect-square" style={{ width: '120px' }}>
-                <div className="placeholder"></div>
-              </div>
-              <div className="aspect-16x9" style={{ width: '200px' }}>
-                <div className="placeholder"></div>
-              </div>
-              <div className="aspect-4x3" style={{ width: '160px' }}>
-                <div className="placeholder"></div>
-              </div>
-            </div>
-
-            <h3 style={{ marginBlockStart: 'var(--space-6)' }}>Image Frame</h3>
-            <div className="img-frame aspect-square" style={{ maxWidth: '240px' }}>
-              <div className="placeholder"></div>
-            </div>
-          </section>
-
-          {/* ===== SKELETON ===== */}
-          <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>اسکلتون — Skeleton</h2>
-            <div className="row" style={{ gap: 'var(--space-5)', alignItems: 'flex-start' }}>
-              {/* Skeleton card */}
-              <div className="skeleton-card" style={{ width: '220px' }}>
-                <div className="skeleton skeleton--image"></div>
-                <div className="skeleton skeleton--title"></div>
-                <div className="skeleton skeleton--line"></div>
-                <div className="skeleton skeleton--price" style={{ height: '0.9em', width: '40%', borderRadius: 'var(--radius-xs)' }}></div>
-              </div>
-
-              {/* Skeleton list */}
-              <div className="skeleton-list" style={{ flex: 1, maxWidth: '400px' }}>
-                <div className="skeleton-row">
-                  <div className="skeleton skeleton--circle"></div>
-                  <div className="skeleton-row__lines">
-                    <div className="skeleton skeleton--text" style={{ width: '70%' }}></div>
-                    <div className="skeleton skeleton--text-sm" style={{ width: '50%' }}></div>
-                  </div>
-                </div>
-                <div className="skeleton-row">
-                  <div className="skeleton skeleton--circle"></div>
-                  <div className="skeleton-row__lines">
-                    <div className="skeleton skeleton--text" style={{ width: '60%' }}></div>
-                    <div className="skeleton skeleton--text-sm" style={{ width: '40%' }}></div>
-                  </div>
-                </div>
-                <div className="skeleton-row">
-                  <div className="skeleton skeleton--circle"></div>
-                  <div className="skeleton-row__lines">
-                    <div className="skeleton skeleton--text" style={{ width: '80%' }}></div>
-                    <div className="skeleton skeleton--text-sm" style={{ width: '45%' }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ===== TOAST ===== */}
-          <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>اعلان — Toast</h2>
-            <div className="row">
-              <button className="btn btn--primary" onClick={() => setToastVisible(true)}>
-                نمایش اعلان
-              </button>
-            </div>
-
-            {toastVisible && (
-              <div className="toast-region" style={{ position: 'relative', inset: 'auto', marginBlockStart: 'var(--space-4)' }}>
-                <div className="toast toast--success">
-                  <span className="toast__icon">✓</span>
-                  <div className="toast__body">
-                    <div className="toast__title">موفق</div>
-                    <div className="toast__message">محصول به سبد خرید اضافه شد.</div>
-                  </div>
-                  <button className="toast__close" onClick={() => setToastVisible(false)} aria-label="بستن">×</button>
-                </div>
-                <div className="toast toast--error">
-                  <span className="toast__icon">✕</span>
-                  <div className="toast__body">
-                    <div className="toast__title">خطا</div>
-                    <div className="toast__message">لطفاً دوباره تلاش کنید.</div>
-                  </div>
-                  <button className="toast__close" onClick={() => setToastVisible(false)} aria-label="بستن">×</button>
-                </div>
-                <div className="toast toast--info">
-                  <span className="toast__icon">ℹ</span>
-                  <div className="toast__body">
-                    <div className="toast__title">اطلاعات</div>
-                    <div className="toast__message">به‌روزرسانی جدید در دسترس است.</div>
-                  </div>
-                  <button className="toast__close" onClick={() => setToastVisible(false)} aria-label="بستن">×</button>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* ===== MODAL ===== */}
-          <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>مودال — Modal</h2>
-            <button className="btn btn--primary" onClick={() => setModalOpen(true)}>
-              باز کردن مودال
-            </button>
-
-            {modalOpen && (
-              <div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-                <div className="modal__backdrop" onClick={() => setModalOpen(false)}></div>
-                <div className="modal__dialog">
-                  <div className="modal__header">
-                    <h3 className="modal__title" id="modal-title">عنوان مودال</h3>
-                    <button className="modal__close" onClick={() => setModalOpen(false)} aria-label="بستن">×</button>
-                  </div>
-                  <div className="modal__body">
-                    <p>این محتوای مودال است. می‌توانید هر اطلاعاتی را اینجا قرار دهید.</p>
-                    <p>مودال با backdrop blur و انیمیشن pop-in نمایش داده می‌شود.</p>
-                  </div>
-                  <div className="modal__footer">
-                    <button className="btn btn--ghost" onClick={() => setModalOpen(false)}>انصراف</button>
-                    <button className="btn btn--primary" onClick={() => setModalOpen(false)}>تأیید</button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* ===== DROPDOWN ===== */}
-          <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>دراپ‌داون — Dropdown</h2>
-            <div className="dropdown">
               <button
-                className="dropdown__trigger"
-                aria-expanded={dropdownOpen}
-                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className={`btn btn--secondary ${showShake ? 'shake' : ''}`}
+                onClick={() => triggerAnimation(setShowShake, 600)}
               >
-                <span>مرتب‌سازی</span>
-                <span className="dropdown__caret"></span>
+                لرزش (Shake)
               </button>
-              <div className="dropdown__menu" data-open={dropdownOpen ? "true" : "false"}>
-                <button className="dropdown__item" aria-checked="true">جدیدترین</button>
-                <button className="dropdown__item">ارزان‌ترین</button>
-                <button className="dropdown__item">گران‌ترین</button>
-                <div className="dropdown__separator"></div>
-                <button className="dropdown__item">پرفروش‌ترین</button>
-                <button className="dropdown__item" disabled>محبوب‌ترین</button>
-              </div>
+
+              <button
+                className={`btn btn--ghost ${showHeartPop ? 'heart-pop' : ''}`}
+                onClick={() => triggerAnimation(setShowHeartPop, 400)}
+                style={{ position: 'relative' }}
+              >
+                ❤️ پاپ قلب
+              </button>
+
+              <button
+                className={`btn btn--primary ${showFlashSuccess ? 'flash-success' : ''}`}
+                onClick={() => triggerAnimation(setShowFlashSuccess, 600)}
+              >
+                فلش موفقیت
+              </button>
+
+              <button
+                className={`btn btn--danger ${showFlashError ? 'flash-error' : ''}`}
+                onClick={() => triggerAnimation(setShowFlashError, 600)}
+              >
+                فلش خطا
+              </button>
             </div>
           </section>
 
-          {/* ===== TOOLTIP ===== */}
+          {/* ===== FLY-TO-CART ===== */}
           <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>تولتیپ — Tooltip</h2>
-            <div className="row" style={{ gap: 'var(--space-6)' }}>
-              <div className="tooltip" tabIndex={0}>
-                <button className="btn btn--secondary">بالا (پیش‌فرض)</button>
-                <div className="tooltip__bubble">این یک تولتیپ است</div>
-              </div>
-              <div className="tooltip tooltip--bottom" tabIndex={0}>
-                <button className="btn btn--secondary">پایین</button>
-                <div className="tooltip__bubble">تولتیپ پایین</div>
-              </div>
-            </div>
-          </section>
-
-          {/* ===== GALLERY ===== */}
-          <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>گالری — Gallery</h2>
-            <div className="gallery" style={{ maxWidth: '480px' }}>
-              <div className="gallery__stage">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className={`gallery__slide ${galleryIndex === i ? 'is-active' : ''}`}>
-                    <div className="placeholder"></div>
-                  </div>
-                ))}
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>پرواز به سبد — Fly-to-Cart</h2>
+            <div className="row" style={{ gap: 'var(--space-6)', alignItems: 'center' }}>
+              <div style={{ position: 'relative' }}>
+                <div className="img-frame aspect-square" style={{ width: '120px' }}>
+                  <div className="placeholder"></div>
+                </div>
                 <button
-                  className="gallery__nav gallery__nav--prev"
-                  onClick={() => setGalleryIndex((galleryIndex - 1 + 3) % 3)}
-                  aria-label="قبلی"
+                  className="btn btn--primary btn--sm"
+                  style={{ marginBlockStart: 'var(--space-2)' }}
+                  onClick={() => {
+                    setShowFlyItem(true);
+                    setTimeout(() => {
+                      setShowFlyItem(false);
+                      setShowCartPulse(true);
+                      setTimeout(() => setShowCartPulse(false), 400);
+                    }, 800);
+                  }}
                 >
-                  ‹
+                  افزودن به سبد
                 </button>
-                <button
-                  className="gallery__nav gallery__nav--next"
-                  onClick={() => setGalleryIndex((galleryIndex + 1) % 3)}
-                  aria-label="بعدی"
-                >
-                  ›
-                </button>
-                <div className="gallery__counter">{galleryIndex + 1} / 3</div>
               </div>
-              <div className="gallery__thumbs">
-                {[0, 1, 2].map((i) => (
-                  <button
-                    key={i}
-                    className={`gallery__thumb ${galleryIndex === i ? 'is-active' : ''}`}
-                    onClick={() => setGalleryIndex(i)}
-                    aria-label={`تصویر ${i + 1}`}
-                  >
-                    <div className="placeholder"></div>
-                  </button>
-                ))}
+
+              <div className={`btn btn--secondary btn--icon ${showCartPulse ? 'cart-pulse' : ''}`}>
+                🛒
               </div>
             </div>
-          </section>
 
-          {/* ===== BLUR-UP IMAGE ===== */}
-          <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>تصویر بلور-آپ — Blur-up Image</h2>
-            <div className="img-blur aspect-square" style={{ maxWidth: '240px', borderRadius: 'var(--radius-lg)' }}>
-              <div className="img-blur__blur" style={{ background: 'linear-gradient(135deg, #C8CEDF 0%, #E4E6EE 100%)' }}></div>
-              <div className={`img-blur__full ${imageLoaded ? '' : ''}`} style={{ background: 'var(--color-surface-3)' }}>
+            {showFlyItem && (
+              <div className="fly-item" style={{ top: '50%', left: '20%' }}>
                 <div className="placeholder"></div>
               </div>
+            )}
+          </section>
+
+          {/* ===== LOADING & FEEDBACK ===== */}
+          <section>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>بارگذاری و فیدبک — Loading & Feedback</h2>
+            <div className="row" style={{ gap: 'var(--space-6)', alignItems: 'center' }}>
+              <div>
+                <p className="text-muted" style={{ fontSize: 'var(--text-xs)', marginBlockEnd: 'var(--space-2)' }}>
+                  اسپینر معمولی
+                </p>
+                <div className="spinner"></div>
+              </div>
+
+              <div>
+                <p className="text-muted" style={{ fontSize: 'var(--text-xs)', marginBlockEnd: 'var(--space-2)' }}>
+                  اسپینر بزرگ
+                </p>
+                <div className="spinner spinner--lg"></div>
+              </div>
+
+              <div style={{ flex: 1, maxWidth: '300px' }}>
+                <p className="text-muted" style={{ fontSize: 'var(--text-xs)', marginBlockEnd: 'var(--space-2)' }}>
+                  نوار پیشرفت نامعین
+                </p>
+                <div className="progress-indeterminate"></div>
+              </div>
             </div>
-            <button
-              className="btn btn--secondary"
-              style={{ marginBlockStart: 'var(--space-3)' }}
-              onClick={() => setImageLoaded(!imageLoaded)}
-            >
-              {imageLoaded ? 'بازنشانی' : 'شبیه‌سازی بارگذاری'}
-            </button>
+
+            <div style={{ marginBlockStart: 'var(--space-6)' }}>
+              <button className="btn btn--primary" aria-busy="true">
+                در حال بارگذاری
+              </button>
+            </div>
           </section>
 
-          {/* ===== DRAWER ===== */}
+          {/* ===== COUNTER ANIMATIONS ===== */}
           <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>دراور — Drawer</h2>
-            <button className="btn btn--primary" onClick={() => setDrawerOpen(true)}>
-              باز کردن دراور
-            </button>
-
-            {drawerOpen && (
-              <div className="drawer" role="dialog" aria-modal="true">
-                <div className="drawer__backdrop" onClick={() => setDrawerOpen(false)}></div>
-                <div className="drawer__panel">
-                  <div className="drawer__header">
-                    <h3 className="drawer__title">سبد خرید</h3>
-                    <button className="drawer__close" onClick={() => setDrawerOpen(false)} aria-label="بستن">×</button>
-                  </div>
-                  <div className="drawer__body">
-                    <div className="drawer__empty">
-                      <p>سبد خرید شما خالی است.</p>
-                    </div>
-                  </div>
-                  <div className="drawer__footer">
-                    <button className="btn btn--primary btn--block">تکمیل خرید</button>
-                  </div>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>شمارنده — Counter</h2>
+            <div className="row" style={{ gap: 'var(--space-6)' }}>
+              <div>
+                <p className="text-muted" style={{ fontSize: 'var(--text-xs)', marginBlockEnd: 'var(--space-2)' }}>
+                  تیک رقم
+                </p>
+                <div className="digit-tick" style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--weight-bold)' }}>
+                  ۱۲۸
                 </div>
               </div>
-            )}
-          </section>
 
-          {/* ===== BOTTOM SHEET ===== */}
-          <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>باتم شیت — Bottom Sheet</h2>
-            <p className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>
-              (فقط در موبایل نمایش داده می‌شود — در دسکتاپ مخفی است)
-            </p>
-            <button className="btn btn--primary" onClick={() => setSheetOpen(true)}>
-              باز کردن شیت
-            </button>
-
-            {sheetOpen && (
-              <div className="sheet" role="dialog" aria-modal="true">
-                <div className="sheet__backdrop" onClick={() => setSheetOpen(false)}></div>
-                <div className="sheet__panel">
-                  <div className="sheet__handle"></div>
-                  <div className="sheet__header">
-                    <h3 className="sheet__title">فیلترها</h3>
-                    <button className="drawer__close" onClick={() => setSheetOpen(false)} aria-label="بستن">×</button>
-                  </div>
-                  <div className="sheet__body">
-                    <div className="stack">
-                      <div className="form-control">
-                        <label className="form-label">برند</label>
-                        <div className="chip-group">
-                          <button className="chip" aria-pressed="true">همه</button>
-                          <button className="chip">سامسونگ</button>
-                          <button className="chip">اپل</button>
-                          <button className="chip">شیائومی</button>
-                        </div>
-                      </div>
-                      <div className="form-control">
-                        <label className="form-label">محدوده قیمت</label>
-                        <input className="input" type="text" placeholder="حداقل قیمت" />
-                        <input className="input" type="text" placeholder="حداکثر قیمت" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="sheet__footer">
-                    <button className="btn btn--ghost" onClick={() => setSheetOpen(false)}>بازنشانی</button>
-                    <button className="btn btn--primary" onClick={() => setSheetOpen(false)}>اعمال</button>
-                  </div>
+              <div>
+                <p className="text-muted" style={{ fontSize: 'var(--text-xs)', marginBlockEnd: 'var(--space-2)' }}>
+                  درخشش افزایش
+                </p>
+                <div className="increment-glow" style={{ padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)' }}>
+                  +۱۵
                 </div>
               </div>
-            )}
+            </div>
           </section>
 
-          {/* ===== STICKY BAR ===== */}
+          {/* ===== EMPTY & ERROR STATES ===== */}
           <section>
-            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>نوار چسبان — Sticky Bar</h2>
-            <p className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>
-              (فقط در موبایل نمایش داده می‌شود)
-            </p>
-            <button className="btn btn--primary" onClick={() => setStickyVisible(!stickyVisible)}>
-              {stickyVisible ? 'مخفی کردن' : 'نمایش'} نوار چسبان
-            </button>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>حالت‌های خالی و خطا — Empty & Error States</h2>
+            <div className="row" style={{ gap: 'var(--space-8)', alignItems: 'center' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div className="empty-float" style={{ fontSize: '48px', marginBlockEnd: 'var(--space-3)' }}>
+                  📦
+                </div>
+                <p className="text-muted">سبد خرید شما خالی است</p>
+              </div>
+
+              <div style={{ textAlign: 'center' }}>
+                <div className="error-bob" style={{ fontSize: '48px', marginBlockEnd: 'var(--space-3)' }}>
+                  ⚠️
+                </div>
+                <p className="text-muted">خطایی رخ داد</p>
+              </div>
+            </div>
+          </section>
+
+          {/* ===== PAGE ENTER ===== */}
+          <section>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>ورود صفحه — Page Enter</h2>
+            <div className="page-enter" style={{
+              padding: 'var(--space-6)',
+              background: 'var(--color-surface)',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-card)'
+            }}>
+              <p>این محتوا با انیمیشن page-enter ظاهر شده است.</p>
+            </div>
+          </section>
+
+          {/* ===== SKELETON STAGGER ===== */}
+          <section>
+            <h2 style={{ marginBlockEnd: 'var(--space-5)' }}>اسکلتون استگر — Skeleton Stagger</h2>
+            <div className="skeleton-stagger" style={{ display: 'flex', gap: 'var(--space-4)' }}>
+              <div className="skeleton skeleton--image" style={{ width: '80px', height: '80px' }}></div>
+              <div className="skeleton skeleton--image" style={{ width: '80px', height: '80px' }}></div>
+              <div className="skeleton skeleton--image" style={{ width: '80px', height: '80px' }}></div>
+              <div className="skeleton skeleton--image" style={{ width: '80px', height: '80px' }}></div>
+            </div>
           </section>
 
         </div>
       </main>
 
-      {/* Sticky Bar */}
-      <div className={`sticky-bar ${stickyVisible ? 'is-visible' : ''}`}>
-        <div className="sticky-bar__info">
-          <span className="sticky-bar__label">قیمت</span>
-          <span className="sticky-bar__price">۵۲,۰۰۰,۰۰۰ تومان</span>
-        </div>
-        <div className="sticky-bar__actions">
-          <button className="btn btn--primary">افزودن به سبد</button>
-        </div>
-      </div>
+      {/* Back to top button */}
+      <button
+        className={`back-to-top ${showBackToTop ? 'is-visible' : ''}`}
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        aria-label="بازگشت به بالا"
+      >
+        ↑
+      </button>
 
       {/* Footer */}
       <footer
@@ -380,7 +297,7 @@ function App() {
         }}
       >
         <div className="container">
-          <p>موبوگرام — فاز ۳: کامپوننت‌های پیشرفته</p>
+          <p>موبوگرام — فاز ۴: سیستم حرکت CSS</p>
         </div>
       </footer>
     </div>
