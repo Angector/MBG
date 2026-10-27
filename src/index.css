@@ -1,1 +1,8 @@
+/* === FILE: src/index.css === */
+/* Project: Mobogram — Phase 1 */
+/* Purpose: Entry point that imports all Phase 1 stylesheets in order */
+
 @import "tailwindcss";
+@import "./styles/tokens.css";
+@import "./styles/reset.css";
+@import "./styles/base.css";

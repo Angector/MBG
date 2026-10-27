@@ -1,0 +1,94 @@
+/* === FILE: styles/reset.css === */
+/* Project: Mobogram — Phase 1 */
+/* Purpose: Modern CSS reset — normalize defaults without stripping semantics */
+
+/* ===== BOX MODEL ===== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ===== RESET MARGINS & PADDING ===== */
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== HTML ===== */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* ===== BODY ===== */
+
+body {
+  min-height: 100dvh;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== MEDIA ELEMENTS ===== */
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* ===== FORM ELEMENTS ===== */
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+/* ===== LINKS ===== */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ===== LISTS ===== */
+
+ul,
+ol {
+  list-style: none;
+}
+
+/* ===== TEXT WRAPPING ===== */
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+/* ===== TABLES ===== */
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
