@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="cart.title">سبد خرید — موبوگرام</title>
+  <link rel="stylesheet" href="../styles/fonts.css">
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/reset.css">
+  <link rel="stylesheet" href="../styles/base.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/advanced.css">
+  <link rel="stylesheet" href="../styles/animations.css">
+  <link rel="stylesheet" href="../styles/pages.css">
+  <link rel="stylesheet" href="../styles/polish.css">
+  <link rel="stylesheet" href="../styles/dark-mode.css">
+  <link rel="stylesheet" href="../styles/preloader.css">
+  <script type="module" src="../src/pages/cart.js"></script>
+</head>
+<body>
+  <a href="#main" class="skip-link" data-i18n="common.skipToContent">پرش به محتوای اصلی</a>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <div class="site-header__logo">
+        <a href="../index.html" data-i18n="site.brandName">موبوگرام</a>
+      </div>
+
+      <nav class="site-header__nav">
+        <ul class="site-header__nav-list">
+          <li><a href="../index.html" data-i18n="nav.home">خانه</a></li>
+          <li><a href="products.html" data-i18n="nav.products">محصولات</a></li>
+          <li><a href="brands.html" data-i18n="nav.brands">برندها</a></li>
+          <li><a href="contact.html" data-i18n="nav.contact">تماس با ما</a></li>
+        </ul>
+      </nav>
+
+      <div class="site-header__actions">
+        <button id="theme-btn" class="btn btn--icon theme-toggle" aria-label="تغییر تم" data-i18n-aria-label="common.toggleTheme">🌙</button>
+
+        <button class="btn btn--icon btn--ghost" aria-label="جستجو" data-i18n-aria-label="nav.search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+        </button>
+
+        <button class="btn btn--icon btn--ghost site-header__wishlist-btn" aria-label="علاقه‌مندی‌ها" data-i18n-aria-label="nav.wishlist">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+          <span class="badge badge--floating site-header__wishlist-count" hidden>۰</span>
+        </button>
+
+        <button class="btn btn--icon btn--ghost site-header__cart-btn" aria-label="سبد خرید" data-i18n-aria-label="nav.cart">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span class="badge badge--floating site-header__cart-count" hidden>۰</span>
+        </button>
+
+        <a href="auth.html" class="btn btn--secondary site-header__auth-btn" data-i18n="nav.login">ورود</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="container">
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <ol class="breadcrumb__list">
+        <li class="breadcrumb__item"><a href="../index.html" data-i18n="nav.home">خانه</a></li>
+        <li class="breadcrumb__item" aria-current="page" data-i18n="cart.title">سبد خرید</li>
+      </ol>
+    </nav>
+
+    <h1 class="page-title" data-i18n="cart.title">سبد خرید</h1>
+
+    <div id="cart-loading" class="cart-loading">
+      <div class="cart-layout">
+        <div class="cart-items">
+          <div class="skeleton skeleton--block" style="height: 120px;"></div>
+          <div class="skeleton skeleton--block" style="height: 120px;"></div>
+        </div>
+        <div class="cart-summary">
+          <div class="skeleton skeleton--block" style="height: 300px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="cart-empty" class="cart-empty" hidden>
+      <div class="empty-state"></div>
+    </div>
+
+    <div id="cart-content" class="cart-content" hidden>
+      <div class="cart-layout">
+        <div id="cart-items-container" class="cart-items"></div>
+
+        <aside class="cart-summary">
+          <div class="cart-summary__card">
+            <h2 class="cart-summary__title" data-i18n="cart.orderSummary">خلاصه سفارش</h2>
+
+            <div class="cart-summary__row">
+              <span data-i18n="cart.subtotal">جمع کل</span>
+              <span id="cart-subtotal">۰ تومان</span>
+            </div>
+
+            <div class="cart-summary__row" id="cart-discount-row" hidden>
+              <span data-i18n="cart.discount">تخفیف</span>
+              <span id="cart-discount">۰ تومان</span>
+            </div>
+
+            <div class="cart-summary__coupon">
+              <label class="cart-summary__coupon-label" for="coupon-code" data-i18n="cart.couponCode">کد تخفیف</label>
+              <div class="cart-summary__coupon-input">
+                <input type="text" id="coupon-code" class="input" placeholder="MOBO10" data-i18n-placeholder="cart.couponPlaceholder">
+                <button id="apply-coupon" class="btn btn--secondary" data-i18n="cart.apply">اعمال</button>
+              </div>
+              <p id="coupon-message" class="text-sm" hidden></p>
+            </div>
+
+            <div class="cart-summary__row cart-summary__row--total">
+              <span data-i18n="cart.total">مبلغ قابل پرداخت</span>
+              <span id="cart-total">۰ تومان</span>
+            </div>
+
+            <div class="cart-summary__actions">
+              <a href="checkout.html" class="btn btn--primary btn--block" data-i18n="cart.checkout">ادامه فرآیند خرید</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <div class="site-footer__column">
+        <h3 data-i18n="footer.about">درباره ما</h3>
+        <p data-i18n="footer.aboutText">موبوگرام، فروشگاه آنلاین گوشی‌های موبایل با بهترین قیمت و کیفیت.</p>
+      </div>
+
+      <div class="site-footer__column">
+        <h3 data-i18n="footer.quickLinks">دسترسی سریع</h3>
+        <ul>
+          <li><a href="products.html" data-i18n="nav.products">محصولات</a></li>
+          <li><a href="brands.html" data-i18n="nav.brands">برندها</a></li>
+          <li><a href="contact.html" data-i18n="nav.contact">تماس با ما</a></li>
+        </ul>
+      </div>
+
+      <div class="site-footer__column">
+        <h3 data-i18n="footer.customerService">خدمات مشتریان</h3>
+        <ul>
+          <li><a href="faq.html" data-i18n="footer.faq">سؤالات متداول</a></li>
+          <li><a href="shipping.html" data-i18n="footer.shipping">شرایط ارسال</a></li>
+          <li><a href="returns.html" data-i18n="footer.returns">بازگشت کالا</a></li>
+        </ul>
+      </div>
+
+      <div class="site-footer__column">
+        <h3 data-i18n="footer.contact">تماس با ما</h3>
+        <p data-i18n="footer.email">ایمیل: support@mobogram.ir</p>
+        <p data-i18n="footer.phone">تلفن: ۰۲۱-۱۲۳۴۵۶۷۸</p>
+      </div>
+    </div>
+
+    <div class="site-footer__bottom">
+      <div class="container">
+        <p data-i18n="footer.copyright">© ۱۴۰۳ موبوگرام. تمامی حقوق محفوظ است.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

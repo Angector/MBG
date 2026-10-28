@@ -587,3 +587,325 @@ export function renderCheckoutSteps(currentStep, options = {}) {
 
   return container;
 }
+
+// ===== SECTION 5: Quick View Modal =====
+
+/**
+ * Render a quick view modal for a product.
+ * @param {Object} product - Product with variants
+ * @param {Object} [options]
+ * @param {(product: Object, variantId: string) => void} [options.onAddToCart]
+ * @returns {{ open: () => void, close: () => void, element: HTMLElement }}
+ */
+export function renderQuickViewModal(product, options = {}) {
+  const { onAddToCart } = options;
+
+  // Create modal structure
+  const modal = createEl('div', {
+    className: 'modal',
+    attrs: { hidden: '', role: 'dialog', 'aria-modal': 'true', 'aria-label': product.name },
+  });
+
+  const backdrop = createEl('div', { className: 'modal__backdrop' });
+  backdrop.addEventListener('click', () => close());
+  modal.appendChild(backdrop);
+
+  const dialog = createEl('div', { className: 'modal__dialog modal__dialog--quick-view' });
+
+  // Close button
+  const closeBtn = createEl('button', {
+    className: 'modal__close',
+    textContent: '×',
+    attrs: { 'aria-label': t('common.close') },
+    on: { click: () => close() },
+  });
+  dialog.appendChild(closeBtn);
+
+  // Content grid
+  const content = createEl('div', { className: 'quick-view__content' });
+
+  // Image
+  const imageWrap = createEl('div', { className: 'quick-view__image' });
+  const img = renderImage({
+    url: product.images?.[0] || null,
+    alt: product.name,
+    aspectRatio: '1/1',
+  });
+  imageWrap.appendChild(img);
+  content.appendChild(imageWrap);
+
+  // Info
+  const info = createEl('div', { className: 'quick-view__info' });
+
+  // Title
+  info.appendChild(createEl('h2', {
+    className: 'quick-view__title',
+    textContent: product.name,
+  }));
+
+  // Brand
+  if (product.brand?.name) {
+    info.appendChild(createEl('p', {
+      className: 'quick-view__brand text-muted',
+      textContent: product.brand.name,
+    }));
+  }
+
+  // Price
+  const price = product.discountPrice || product.basePrice;
+  const priceEl = createEl('div', { className: 'quick-view__price' });
+  priceEl.appendChild(createEl('span', {
+    className: 'quick-view__price-current',
+    textContent: formatPrice(price),
+  }));
+  if (product.discountPrice && product.discountPrice < product.basePrice) {
+    priceEl.appendChild(createEl('span', {
+      className: 'quick-view__price-original text-subtle',
+      textContent: formatPrice(product.basePrice),
+    }));
+  }
+  info.appendChild(priceEl);
+
+  // Variant selector (simplified)
+  if (product.variants && product.variants.length > 0) {
+    const variantLabel = createEl('div', {
+      className: 'quick-view__label',
+      textContent: t('product.selectVariant') || 'انتخاب مدل',
+    });
+    info.appendChild(variantLabel);
+
+    const variantSelect = createEl('select', {
+      className: 'input quick-view__variant-select',
+    });
+
+    product.variants.forEach((v, idx) => {
+      if (v.isActive && v.stock > 0) {
+        const option = createEl('option', {
+          textContent: `${v.storage} - ${v.color}${v.ram ? ` - ${v.ram}` : ''}`,
+          attrs: { value: v.id },
+        });
+        if (idx === 0) option.selected = true;
+        variantSelect.appendChild(option);
+      }
+    });
+
+    info.appendChild(variantSelect);
+  }
+
+  // Add to cart button
+  const addBtn = createEl('button', {
+    className: 'btn btn--primary btn--block quick-view__add-btn',
+    textContent: t('product.addToCart') || 'افزودن به سبد خرید',
+    attrs: { type: 'button' },
+    on: {
+      click: () => {
+        const variantSelect = dialog.querySelector('.quick-view__variant-select');
+        const variantId = variantSelect ? variantSelect.value : product.variants?.[0]?.id;
+        if (onAddToCart && variantId) {
+          onAddToCart(product, variantId);
+        }
+        close();
+      },
+    },
+  });
+  info.appendChild(addBtn);
+
+  // View full details link
+  const detailsLink = createEl('a', {
+    className: 'btn btn--link quick-view__details-link',
+    textContent: t('product.viewDetails') || 'مشاهده جزئیات کامل',
+    attrs: { href: `pages/product.html?slug=${encodeURIComponent(product.slug)}` },
+  });
+  info.appendChild(detailsLink);
+
+  content.appendChild(info);
+  dialog.appendChild(content);
+  modal.appendChild(dialog);
+
+  // State management
+  let isOpen = false;
+  let releaseFocus = null;
+  let previousFocus = null;
+
+  const open = () => {
+    if (isOpen) return;
+    isOpen = true;
+    previousFocus = document.activeElement;
+
+    modal.removeAttribute('hidden');
+    setBodyLock(true);
+    releaseFocus = trapFocus(dialog, { onEscape: () => close() });
+  };
+
+  const close = () => {
+    if (!isOpen) return;
+    isOpen = false;
+
+    if (releaseFocus) {
+      releaseFocus();
+      releaseFocus = null;
+    }
+    setBodyLock(false);
+    modal.setAttribute('hidden', '');
+
+    if (previousFocus instanceof HTMLElement) {
+      previousFocus.focus();
+    }
+  };
+
+  return { open, close, element: modal };
+}
+
+// ===== SECTION 6: Wishlist Drawer =====
+
+/**
+ * Render a wishlist drawer.
+ * @param {Array} wishlistItems - Array of wishlist items with product data
+ * @param {Object} [options]
+ * @param {(productId: string) => void} [options.onRemove]
+ * @param {(product: Object) => void} [options.onAddToCart]
+ * @returns {{ open: () => void, close: () => void, element: HTMLElement }}
+ */
+export function renderWishlistDrawer(wishlistItems, options = {}) {
+  const { onRemove, onAddToCart } = options;
+
+  // Create drawer structure
+  const drawer = createEl('div', {
+    className: 'drawer',
+    attrs: { hidden: '', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('wishlist.title') || 'علاقه‌مندی‌ها' },
+  });
+
+  const backdrop = createEl('div', { className: 'drawer__backdrop' });
+  backdrop.addEventListener('click', () => close());
+  drawer.appendChild(backdrop);
+
+  const panel = createEl('div', { className: 'drawer__panel' });
+
+  // Header
+  const header = createEl('div', { className: 'drawer__header' });
+  header.appendChild(createEl('h2', {
+    className: 'drawer__title',
+    textContent: t('wishlist.title') || 'علاقه‌مندی‌ها',
+  }));
+
+  const closeBtn = createEl('button', {
+    className: 'drawer__close',
+    textContent: '×',
+    attrs: { 'aria-label': t('common.close') },
+    on: { click: () => close() },
+  });
+  header.appendChild(closeBtn);
+  panel.appendChild(header);
+
+  // Body
+  const body = createEl('div', { className: 'drawer__body' });
+
+  if (!wishlistItems || wishlistItems.length === 0) {
+    const empty = renderEmptyState({
+      title: t('wishlist.empty') || 'لیست علاقه‌مندی خالی است',
+      description: t('wishlist.emptyHint') || 'محصولات مورد علاقه خود را ذخیره کنید',
+      icon: 'heart',
+    });
+    body.appendChild(empty);
+  } else {
+    const list = createEl('div', { className: 'wishlist-list stack' });
+
+    wishlistItems.forEach((item) => {
+      const product = item.product;
+      if (!product) return;
+
+      const card = createEl('div', { className: 'wishlist-item' });
+
+      // Image
+      const imageWrap = createEl('div', { className: 'wishlist-item__image' });
+      const img = renderImage({
+        url: product.images?.[0] || null,
+        alt: product.name,
+        aspectRatio: '1/1',
+      });
+      img.style.width = '80px';
+      img.style.height = '80px';
+      imageWrap.appendChild(img);
+      card.appendChild(imageWrap);
+
+      // Details
+      const details = createEl('div', { className: 'wishlist-item__details' });
+      details.appendChild(createEl('h3', {
+        className: 'wishlist-item__name',
+        textContent: product.name,
+      }));
+
+      const price = product.discountPrice || product.basePrice;
+      details.appendChild(createEl('div', {
+        className: 'wishlist-item__price',
+        textContent: formatPrice(price),
+      }));
+
+      card.appendChild(details);
+
+      // Actions
+      const actions = createEl('div', { className: 'wishlist-item__actions' });
+
+      if (onAddToCart) {
+        const addBtn = createEl('button', {
+          className: 'btn btn--primary btn--sm',
+          textContent: t('product.addToCart') || 'افزودن به سبد',
+          attrs: { type: 'button' },
+          on: { click: () => onAddToCart(product) },
+        });
+        actions.appendChild(addBtn);
+      }
+
+      if (onRemove) {
+        const removeBtn = createEl('button', {
+          className: 'btn btn--ghost btn--sm',
+          textContent: '×',
+          attrs: { 'aria-label': t('common.remove') },
+          on: { click: () => onRemove(product.id) },
+        });
+        actions.appendChild(removeBtn);
+      }
+
+      card.appendChild(actions);
+      list.appendChild(card);
+    });
+
+    body.appendChild(list);
+  }
+
+  panel.appendChild(body);
+  drawer.appendChild(panel);
+
+  // State management
+  let isOpen = false;
+  let releaseFocus = null;
+  let previousFocus = null;
+
+  const open = () => {
+    if (isOpen) return;
+    isOpen = true;
+    previousFocus = document.activeElement;
+
+    drawer.removeAttribute('hidden');
+    setBodyLock(true);
+    releaseFocus = trapFocus(panel, { onEscape: () => close() });
+  };
+
+  const close = () => {
+    if (!isOpen) return;
+    isOpen = false;
+
+    if (releaseFocus) {
+      releaseFocus();
+      releaseFocus = null;
+    }
+    setBodyLock(false);
+    drawer.setAttribute('hidden', '');
+
+    if (previousFocus instanceof HTMLElement) {
+      previousFocus.focus();
+    }
+  };
+
+  return { open, close, element: drawer };
+}

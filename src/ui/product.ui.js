@@ -53,7 +53,7 @@ function getEffectivePrice(product) {
  *   });
  */
 export function renderProductCard(product, options = {}) {
-  const { isWishlisted = false, compact = false, onToggleWishlist, onAddToCart } = options;
+  const { isWishlisted = false, compact = false, onToggleWishlist, onAddToCart, onQuickView } = options;
   const totalStock = getTotalStock(product);
   const isAvailable = totalStock > 0;
   const price = getEffectivePrice(product);
@@ -71,6 +71,23 @@ export function renderProductCard(product, options = {}) {
     aspectRatio: '1/1',
   });
   imageWrap.appendChild(img);
+
+  // Quick View button
+  if (onQuickView) {
+    const quickViewBtn = createEl('button', {
+      className: 'product-card__quick-view',
+      attrs: {
+        'aria-label': t('product.quickView') || 'مشاهده سریع',
+      },
+    });
+    quickViewBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    quickViewBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onQuickView(product);
+    });
+    imageWrap.appendChild(quickViewBtn);
+  }
 
   // Wishlist button
   if (onToggleWishlist) {

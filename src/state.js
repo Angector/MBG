@@ -252,6 +252,54 @@ function freshCart() {
   };
 }
 
+// ===== SECTION: BroadcastChannel Sync =====
+
+/** @type {BroadcastChannel|null} */
+let syncChannel = null;
+let isSyncing = false;
+
+/**
+ * Initialize BroadcastChannel for cross-tab cart sync.
+ */
+function initSyncChannel() {
+  if (typeof BroadcastChannel === 'undefined') return;
+  
+  try {
+    syncChannel = new BroadcastChannel('mobogram-sync');
+    syncChannel.onmessage = (event) => {
+      if (event.data?.type === 'cart-update' && !isSyncing) {
+        isSyncing = true;
+        try {
+          const newCart = event.data.cart;
+          if (newCart && Array.isArray(newCart.items)) {
+            cartStore.replaceAll(newCart.items);
+          }
+        } finally {
+          isSyncing = false;
+        }
+      }
+    };
+  } catch (err) {
+    log.warn('BroadcastChannel not available:', err);
+  }
+}
+
+/**
+ * Broadcast cart state to other tabs.
+ * @param {Cart} cart
+ */
+function broadcastCart(cart) {
+  if (isSyncing || !syncChannel) return;
+  try {
+    syncChannel.postMessage({ type: 'cart-update', cart });
+  } catch (err) {
+    log.warn('Failed to broadcast cart:', err);
+  }
+}
+
+// Initialize sync channel on module load
+initSyncChannel();
+
 // ===== SECTION: Cart store =====
 
 /**
@@ -280,7 +328,9 @@ function createCartStore() {
   const store = createStore(readCartFromStorage(), { freeze: true });
 
   const persist = () => {
-    writeCartToStorage(store.getState());
+    const cart = store.getState();
+    writeCartToStorage(cart);
+    broadcastCart(cart);
   };
 
   const getState = () => store.getState();
