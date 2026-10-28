@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="auth.title">ورود / ثبت‌نام — موبوگرام</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/reset.css">
+  <link rel="stylesheet" href="../styles/base.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/advanced.css">
+  <link rel="stylesheet" href="../styles/animations.css">
+  <link rel="stylesheet" href="../styles/pages.css">
+  <script type="module" src="../src/pages/auth.js"></script>
+</head>
+<body>
+  <main class="auth-layout">
+    <div class="auth-card">
+      <div class="auth-card__header">
+        <a href="../index.html" class="auth-card__logo" data-i18n="site.brandName">موبوگرام</a>
+        <h1 class="auth-card__title" data-i18n="auth.welcome">خوش آمدید</h1>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tabs__tab is-active" data-mode="login" data-i18n="auth.login">ورود</button>
+        <button class="auth-tabs__tab" data-mode="register" data-i18n="auth.register">ثبت‌نام</button>
+      </div>
+
+      <div id="auth-form-container" class="auth-form-container">
+        <!-- Form will be rendered here by JS -->
+      </div>
+
+      <div id="auth-success" class="auth-success" hidden>
+        <!-- Success message will be shown here -->
+      </div>
+    </div>
+  </main>
+</body>
+</html>
