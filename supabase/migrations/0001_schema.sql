@@ -7,10 +7,8 @@
 
 -- ===== TABLE: profiles =====
 create table if not exists public.profiles (
-  -- One row per authenticated user. Auto-created via trigger (see 0004).
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null default '',
-  -- Role is used by RLS to gate admin-only operations
   role text not null default 'customer' check (role in ('customer','admin')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -24,8 +22,7 @@ create table if not exists public.brands (
   id uuid primary key default gen_random_uuid(),
   name text not null check (char_length(name) between 1 and 80),
   slug text not null unique check (slug ~ '^[a-z0-9-]{2,120}$'),
-  -- NULL means storefront renders checkerboard placeholder until admin uploads logo
-  logo_url text nullable,
+  logo_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -38,15 +35,12 @@ create table if not exists public.products (
   slug text not null unique check (slug ~ '^[a-z0-9-]{2,120}$'),
   name text not null check (char_length(name) between 2 and 200),
   brand_id uuid not null references public.brands(id) on delete restrict,
-  -- Restricted to 'phone' for MVP; future categories added via new migration
   category text not null default 'phone' check (category in ('phone')),
   short_description text not null default '',
   description text not null default '',
-  -- Flexible key/value object per phone (screen, battery, chipset, camera, os, etc.)
   specs jsonb not null default '{}'::jsonb,
   base_price numeric(12,0) not null check (base_price >= 0),
   discount_price numeric(12,0) check (discount_price is null or (discount_price >= 0 and discount_price <= base_price)),
-  -- JSON array of Supabase Storage public URLs. Empty array = no image yet
   images jsonb not null default '[]'::jsonb,
   release_year integer check (release_year is null or (release_year between 2000 and 2100)),
   is_featured boolean not null default false,
@@ -67,9 +61,7 @@ create table if not exists public.product_variants (
   color text not null check (char_length(color) between 1 and 40),
   ram text check (ram is null or char_length(ram) between 1 and 20),
   sku text not null unique check (char_length(sku) between 3 and 40),
-  -- Overrides products.base_price / discount_price when present
   price numeric(12,0) not null check (price >= 0),
-  -- Source of truth for availability. Zero = out of stock
   stock integer not null default 0 check (stock >= 0),
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
@@ -93,15 +85,13 @@ comment on table public.wishlists is 'Per user-per-product wishlist join table.'
 -- ===== TABLE: orders =====
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
-  -- restrict: prevent accidental deletion of users with order history
   user_id uuid not null references auth.users(id) on delete restrict,
   status text not null default 'pending' check (status in ('pending','confirmed','shipped','delivered','cancelled')),
   total numeric(12,0) not null check (total >= 0),
-  -- Captured as JSONB snapshot: { province, city, street, postalCode, unit? }
   address jsonb not null,
   customer_name text not null check (char_length(customer_name) between 2 and 100),
   customer_phone text not null check (customer_phone ~ '^09[0-9]{9}$'),
-  customer_note text nullable,
+  customer_note text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -113,7 +103,6 @@ comment on column public.orders.status is 'Progression: pending â†’ confirmed â†
 create table if not exists public.order_items (
   id uuid primary key default gen_random_uuid(),
   order_id uuid not null references public.orders(id) on delete cascade,
-  -- Nullable ON PURPOSE: if product deleted, historical orders keep snapshot data
   variant_id uuid references public.product_variants(id) on delete set null,
   product_id uuid references public.products(id) on delete set null,
   product_name text not null,
@@ -121,7 +110,6 @@ create table if not exists public.order_items (
   color text not null,
   unit_price numeric(12,0) not null check (unit_price >= 0),
   qty integer not null check (qty > 0 and qty <= 99),
-  -- Preserved for order history display: { brandName, imageUrl }
   product_snapshot jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
@@ -133,16 +121,14 @@ comment on column public.order_items.product_snapshot is 'Snapshot data for disp
 create table if not exists public.banners (
   id uuid primary key default gen_random_uuid(),
   title text not null check (char_length(title) between 1 and 200),
-  subtitle text nullable,
-  -- NULL renders checkerboard placeholder until admin uploads image
-  image_url text nullable,
-  cta_label text nullable,
-  cta_link text nullable,
-  -- Integer ordering key; smaller = earlier in list
+  subtitle text,
+  image_url text,
+  cta_label text,
+  cta_link text,
   position integer not null default 0,
   is_active boolean not null default true,
-  starts_at timestamptz nullable,
-  ends_at timestamptz nullable,
+  starts_at timestamptz,
+  ends_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (ends_at is null or starts_at is null or ends_at > starts_at)

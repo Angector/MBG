@@ -12,7 +12,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
  * Supabase project URL
  * @type {string}
  */
-export const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+export const SUPABASE_URL = 'https://zgxipjwlzicpnmdxwbhh.supabase.co';
 
 /**
  * Supabase anon (publishable) key
@@ -21,7 +21,7 @@ export const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
  * because all access is gated by RLS policies.
  * @type {string}
  */
-export const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+export const SUPABASE_ANON_KEY = 'sb_publishable_tn_LI8Vw4Jvz2eONahGupA_9zFv-pv-';
 
 // ===== SECTION: Supabase Client =====
 
