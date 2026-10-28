@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n="site.brandName">موبوگرام</title>
+  <link rel="stylesheet" href="styles/fonts.css">
   <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="styles/reset.css">
   <link rel="stylesheet" href="styles/base.css">
@@ -11,6 +12,8 @@
   <link rel="stylesheet" href="styles/advanced.css">
   <link rel="stylesheet" href="styles/animations.css">
   <link rel="stylesheet" href="styles/pages.css">
+  <link rel="stylesheet" href="styles/dark-mode.css">
+  <link rel="stylesheet" href="styles/preloader.css">
   <script type="module" src="src/pages/home.js"></script>
 </head>
 <body>
@@ -32,6 +35,8 @@
       </nav>
 
       <div class="site-header__actions">
+        <button id="theme-btn" class="btn btn--icon theme-toggle" aria-label="تغییر تم" data-i18n-aria-label="common.toggleTheme">🌙</button>
+
         <button class="btn btn--icon btn--ghost" aria-label="جستجو" data-i18n-aria-label="nav.search">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle>

@@ -1,0 +1,66 @@
+/* === FILE: styles/fonts.css === */
+/* Project: Mobogram — Phase 16: Premium Facelift */
+/* Purpose: Custom font face definitions for the "Nian" font family */
+
+/* ===== Nian Thin (100) ===== */
+@font-face {
+  font-family: 'Nian';
+  src: url('../assets/fonts/nian/Nian Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ===== Nian Light (300) ===== */
+@font-face {
+  font-family: 'Nian';
+  src: url('../assets/fonts/nian/Nian Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ===== Nian Regular (400) ===== */
+@font-face {
+  font-family: 'Nian';
+  src: url('../assets/fonts/nian/Nian-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ===== Nian SemiBold (600) ===== */
+@font-face {
+  font-family: 'Nian';
+  src: url('../assets/fonts/nian/Nian SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ===== Nian Bold (700) ===== */
+@font-face {
+  font-family: 'Nian';
+  src: url('../assets/fonts/nian/Nian Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ===== Nian ExtraBold (800) ===== */
+@font-face {
+  font-family: 'Nian';
+  src: url('../assets/fonts/nian/Nian ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ===== Nian Black (900) ===== */
+@font-face {
+  font-family: 'Nian';
+  src: url('../assets/fonts/nian/Nian Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}

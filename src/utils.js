@@ -947,3 +947,135 @@ export async function retry(operation, options = {}) {
   }
   throw lastError;
 }
+
+// ===== SECTION: Theme Management =====
+
+/**
+ * Initialize theme from localStorage or system preference.
+ * Reads 'mobogram.theme' from localStorage. If 'dark', adds data-theme="dark" to <html>.
+ * Falls back to system preference if no stored preference.
+ * Should be called early in app initialization.
+ * @returns {void}
+ * @example initTheme();
+ */
+export function initTheme() {
+  if (typeof document === 'undefined' || typeof localStorage === 'undefined') return;
+
+  try {
+    const stored = localStorage.getItem('mobogram.theme');
+    if (stored === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else if (stored === 'light') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      // Check system preference
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    }
+  } catch (err) {
+    // localStorage not available or access denied
+  }
+}
+
+/**
+ * Toggle between light and dark themes.
+ * Toggles the data-theme attribute on <html>, updates localStorage,
+ * and changes the theme toggle button icon.
+ * @returns {void}
+ * @example toggleTheme();
+ */
+export function toggleTheme() {
+  if (typeof document === 'undefined' || typeof localStorage === 'undefined') return;
+
+  const html = document.documentElement;
+  const currentTheme = html.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+  if (newTheme === 'dark') {
+    html.setAttribute('data-theme', 'dark');
+  } else {
+    html.removeAttribute('data-theme');
+  }
+
+  try {
+    localStorage.setItem('mobogram.theme', newTheme);
+  } catch (err) {
+    // localStorage not available
+  }
+
+  // Update toggle button icon if it exists
+  const themeBtn = document.getElementById('theme-btn');
+  if (themeBtn) {
+    themeBtn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+  }
+}
+
+/**
+ * Initialize the preloader.
+ * Creates the preloader DOM, appends to body, and hides it on window.load.
+ * @returns {void}
+ * @example initPreloader();
+ */
+export function initPreloader() {
+  if (typeof document === 'undefined') return;
+
+  // Create preloader DOM
+  const preloader = document.createElement('div');
+  preloader.className = 'preloader';
+  preloader.id = 'preloader';
+
+  const logo = document.createElement('div');
+  logo.className = 'preloader__logo';
+  logo.textContent = 'موبوگرام';
+
+  const progress = document.createElement('div');
+  progress.className = 'preloader__progress';
+
+  const bar = document.createElement('div');
+  bar.className = 'preloader__bar';
+  progress.appendChild(bar);
+
+  const text = document.createElement('div');
+  text.className = 'preloader__text';
+  text.textContent = 'در حال بارگذاری...';
+
+  preloader.appendChild(logo);
+  preloader.appendChild(progress);
+  preloader.appendChild(text);
+
+  document.body.appendChild(preloader);
+
+  // Hide on window load
+  if (document.readyState === 'complete') {
+    hidePreloader();
+  } else {
+    window.addEventListener('load', hidePreloader, { once: true });
+  }
+}
+
+/**
+ * Hide the preloader with fade-out animation.
+ * Adds .is-hidden class and removes element after 500ms.
+ * @returns {void}
+ * @example hidePreloader();
+ */
+export function hidePreloader() {
+  const preloader = document.getElementById('preloader');
+  if (!preloader) return;
+
+  preloader.classList.add('is-hidden');
+
+  setTimeout(() => {
+    preloader.remove();
+  }, 500);
+}
+
+// Auto-initialize theme on import
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTheme, { once: true });
+  } else {
+    initTheme();
+  }
+}

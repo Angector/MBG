@@ -5,7 +5,7 @@
 // ===== SECTION 0: Imports =====
 import { ROUTES, BUCKETS } from '../config.js';
 import { t, applyTranslations } from '../i18n.js';
-import { $, createEl, show, hide, toPersianDigits } from '../utils.js';
+import { $, createEl, show, hide, toPersianDigits, initTheme, toggleTheme, initPreloader } from '../utils.js';
 import { appStore, cartStore, setWishlistCount, selectCartCount } from '../state.js';
 import { getSession, onAuthStateChange } from '../services/auth.service.js';
 import { getFeaturedProducts, listBrands } from '../services/catalog.service.js';
@@ -276,6 +276,19 @@ async function loadFeatured() {
  */
 async function init() {
   try {
+    // Initialize theme and preloader
+    initTheme();
+    initPreloader();
+
+    // Bind theme toggle button
+    const themeBtn = $('#theme-btn');
+    if (themeBtn) {
+      // Set initial icon based on current theme
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      themeBtn.textContent = isDark ? '☀️' : '🌙';
+      themeBtn.addEventListener('click', toggleTheme);
+    }
+
     // Initialize header first
     initHeader();
 

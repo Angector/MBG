@@ -1,0 +1,233 @@
+/* === FILE: styles/dark-mode.css === */
+/* Project: Mobogram — Phase 16: Premium Facelift */
+/* Purpose: Dark theme overrides scoped under [data-theme="dark"] */
+
+/* ===== Dark Mode Color Overrides ===== */
+[data-theme="dark"] {
+  /* Background colors */
+  --color-bg: #121217;
+  --color-surface: #1C1C24;
+  --color-surface-2: #262630;
+  --color-surface-3: #32323E;
+
+  /* Text colors */
+  --color-text: #F0F1F5;
+  --color-text-muted: #9A9AA8;
+  --color-text-subtle: #777783;
+
+  /* Border colors */
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+
+  /* Accent colors remain the same for brand consistency */
+  --color-accent: #FF5548;
+  --color-accent-hover: #E8463A;
+  --color-accent-active: #D13A2F;
+  --color-accent-soft: rgba(255, 85, 72, 0.15);
+  --color-on-accent: #FFFFFF;
+
+  /* Status colors - slightly adjusted for dark mode */
+  --color-success: #3FBF7A;
+  --color-success-soft: rgba(63, 191, 122, 0.15);
+  --color-warning: #F0B040;
+  --color-warning-soft: rgba(240, 176, 64, 0.15);
+  --color-danger: #E55A4F;
+  --color-danger-soft: rgba(229, 90, 79, 0.15);
+  --color-info: #4A8FE8;
+  --color-info-soft: rgba(74, 143, 232, 0.15);
+
+  /* Checkerboard placeholder */
+  --color-checker: rgba(255, 255, 255, 0.06);
+
+  /* Glass effect */
+  --glass-bg: rgba(28, 28, 36, 0.75);
+
+  /* Shadows - darker and more subtle for dark mode */
+  --shadow-ambient: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  --shadow-key: 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+  --shadow-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-card: 0 2px 8px -2px rgba(0, 0, 0, 0.4),
+                 0 8px 24px -8px rgba(0, 0, 0, 0.5),
+                 inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-elevated: 0 4px 12px -2px rgba(0, 0, 0, 0.4),
+                     0 16px 40px -12px rgba(0, 0, 0, 0.6),
+                     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-floating: 0 8px 20px -4px rgba(0, 0, 0, 0.5),
+                     0 28px 60px -16px rgba(0, 0, 0, 0.7),
+                     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-inset: inset 0 2px 6px rgba(0, 0, 0, 0.3),
+                  inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+
+  /* Focus ring - adjusted for dark mode */
+  --focus-ring: 0 0 0 3px rgba(255, 85, 72, 0.4);
+}
+
+/* ===== Dark Mode Component Adjustments ===== */
+
+/* Inputs in dark mode */
+[data-theme="dark"] .input {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .input::placeholder {
+  color: var(--color-text-subtle);
+}
+
+/* Buttons in dark mode */
+[data-theme="dark"] .btn--secondary {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .btn--ghost {
+  color: var(--color-text);
+}
+
+/* Cards in dark mode */
+[data-theme="dark"] .card,
+[data-theme="dark"] .product-card {
+  background: var(--color-surface);
+}
+
+/* Modals and drawers */
+[data-theme="dark"] .modal__dialog,
+[data-theme="dark"] .drawer__panel,
+[data-theme="dark"] .sheet__panel {
+  background: var(--color-surface);
+}
+
+[data-theme="dark"] .modal__footer,
+[data-theme="dark"] .drawer__footer,
+[data-theme="dark"] .sheet__footer {
+  background: var(--color-surface-2);
+}
+
+/* Toasts */
+[data-theme="dark"] .toast {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* Tables */
+[data-theme="dark"] .table-wrap {
+  background: var(--color-surface);
+}
+
+[data-theme="dark"] .table thead th {
+  background: var(--color-surface-2);
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+  background: var(--color-surface-2);
+}
+
+/* Skeletons */
+[data-theme="dark"] .skeleton {
+  background-color: var(--color-surface-2);
+  background-image: linear-gradient(
+    90deg,
+    var(--color-surface-2) 0%,
+    var(--color-surface-3) 50%,
+    var(--color-surface-2) 100%
+  );
+}
+
+/* Chips */
+[data-theme="dark"] .chip {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* Badges */
+[data-theme="dark"] .badge--neutral {
+  background: var(--color-surface-3);
+  color: var(--color-text);
+}
+
+/* Scrollbar */
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-strong);
+}
+
+[data-theme="dark"] * {
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+/* Selection */
+[data-theme="dark"] ::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}
+
+/* Links */
+[data-theme="dark"] a {
+  color: var(--color-accent);
+}
+
+/* Site header */
+[data-theme="dark"] .site-header {
+  background: var(--glass-bg);
+  border-block-end-color: var(--color-border);
+}
+
+/* Site footer */
+[data-theme="dark"] .site-footer {
+  background: var(--color-surface);
+  border-block-start-color: var(--color-border);
+}
+
+/* Admin sidebar */
+[data-theme="dark"] .admin-sidebar {
+  background: var(--color-surface);
+  border-inline-end-color: var(--color-border);
+}
+
+/* Auth card */
+[data-theme="dark"] .auth-card {
+  background: var(--color-surface);
+}
+
+/* Account tabs */
+[data-theme="dark"] .account-tabs {
+  background: var(--color-surface);
+}
+
+/* Filter sections */
+[data-theme="dark"] .filter-section {
+  border-block-end-color: var(--color-border);
+}
+
+/* Product card hover */
+[data-theme="dark"] .product-card:hover {
+  box-shadow: var(--shadow-elevated);
+}
+
+/* Gallery navigation */
+[data-theme="dark"] .gallery__nav {
+  background: rgba(28, 28, 36, 0.92);
+  color: var(--color-text);
+}
+
+/* Sticky bar */
+[data-theme="dark"] .sticky-bar {
+  background: var(--color-surface);
+  box-shadow: 0 -4px 16px -6px rgba(0, 0, 0, 0.5),
+              0 -1px 0 var(--color-border);
+}
+
+/* Preloader */
+[data-theme="dark"] .preloader {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Theme toggle */
+[data-theme="dark"] .theme-toggle {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+  background: var(--color-surface-3);
+}

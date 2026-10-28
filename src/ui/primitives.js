@@ -22,6 +22,7 @@ const log = createLogger('primitives');
 /**
  * Render an image with lazy-loading, blur-up, and checkerboard fallback.
  * This is the ONLY function in the app that creates image elements for content.
+ * Supports local fallback: if url is null/empty, tries to load from /assets/images/products/[slug].webp
  * @param {Object} options
  * @param {string|null} options.url - image URL or null
  * @param {string} options.alt - alt text
@@ -29,17 +30,25 @@ const log = createLogger('primitives');
  * @param {'cover'|'contain'} [options.fit='cover']
  * @param {boolean} [options.lazy=true] - use data-src for lazy loading
  * @param {string} [options.aspectRatio=''] - e.g., '1/1', '4/3'
+ * @param {string} [options.slug=''] - product slug for local fallback
  * @returns {HTMLElement} .img-frame wrapper
  * @example
- *   const img = renderImage({ url: product.images[0], alt: product.name, aspectRatio: '1/1' });
+ *   const img = renderImage({ url: product.images[0], alt: product.name, aspectRatio: '1/1', slug: product.slug });
  */
 export function renderImage(options) {
-  const { url, alt = '', className = '', fit = 'cover', lazy = true, aspectRatio = '' } = options;
+  const { url, alt = '', className = '', fit = 'cover', lazy = true, aspectRatio = '', slug = '' } = options;
   const frame = createEl('div', { className: 'img-frame' });
   if (aspectRatio) frame.classList.add(`aspect-${aspectRatio.replace('/', 'x')}`);
   if (className) frame.classList.add(...className.split(' '));
 
-  if (!url) {
+  // Determine image source: URL or local fallback
+  let imageSrc = url;
+  if (!imageSrc && slug) {
+    imageSrc = `/assets/images/products/${slug}.webp`;
+  }
+
+  if (!imageSrc) {
+    // No URL and no slug - show placeholder immediately
     frame.appendChild(createEl('div', { className: 'placeholder' }));
     return frame;
   }
@@ -54,21 +63,29 @@ export function renderImage(options) {
   });
 
   if (lazy) {
-    img.setAttribute('data-src', url);
+    img.setAttribute('data-src', imageSrc);
     img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
   } else {
-    img.src = url;
+    img.src = imageSrc;
   }
 
-  img.addEventListener('error', () => {
+  // Error handler: replace with placeholder
+  const handleError = () => {
     img.remove();
     if (frame.querySelector('.img-blur__blur')) frame.querySelector('.img-blur__blur').remove();
     frame.classList.remove('img-blur');
     frame.appendChild(createEl('div', { className: 'placeholder' }));
-  }, { once: true });
+  };
+
+  img.addEventListener('error', handleError, { once: true });
 
   frame.appendChild(img);
-  observeLazyImages(frame, 'img[data-src]');
+  
+  // Only observe for lazy loading if using data-src
+  if (lazy) {
+    observeLazyImages(frame, 'img[data-src]');
+  }
+  
   return frame;
 }
 
