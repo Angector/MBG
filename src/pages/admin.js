@@ -3,7 +3,7 @@
 // Purpose: Orchestrate admin pages (dashboard, products, banners, settings)
 
 // ===== SECTION 0: Imports =====
-import { ROUTES } from '../config.js';
+import { ROUTES, supabase } from '../config.js';
 import { t } from '../i18n.js';
 import { $, createEl, show, hide } from '../utils.js';
 import { requireAdmin, getSession } from '../services/auth.service.js';
@@ -104,10 +104,150 @@ async function renderDashboardPage() {
   });
 
   content.appendChild(stats);
+
+  // Sales chart
+  const chartSection = createEl('div', { className: 'stack' });
+  chartSection.style.marginBlockStart = 'var(--space-8)';
+  chartSection.style.padding = 'var(--space-5)';
+  chartSection.style.background = 'var(--color-surface)';
+  chartSection.style.borderRadius = 'var(--radius-lg)';
+  chartSection.style.boxShadow = 'var(--shadow-card)';
+
+  chartSection.appendChild(createEl('h2', { 
+    textContent: t('admin.salesChart') || 'نمودار فروش ۷ روز اخیر',
+    attrs: { style: 'margin: 0 0 var(--space-4); font-size: var(--text-xl);' }
+  }));
+
+  const canvas = createEl('canvas', {
+    attrs: {
+      id: 'sales-chart',
+      width: '800',
+      height: '400',
+      style: 'width: 100%; height: auto; max-height: 400px;'
+    }
+  });
+  chartSection.appendChild(canvas);
+
+  content.appendChild(chartSection);
+
+  // Draw mock sales data
+  setTimeout(() => {
+    const mockData = [
+      { date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), total: 15000000 },
+      { date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), total: 23000000 },
+      { date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), total: 18000000 },
+      { date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), total: 32000000 },
+      { date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), total: 28000000 },
+      { date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), total: 41000000 },
+      { date: new Date().toISOString(), total: 35000000 },
+    ];
+    drawSalesChart(canvas, mockData);
+  }, 100);
 }
 
 function toPersianDigits(str) {
   return String(str).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
+}
+
+// ===== SECTION 2.5: Charts & Export Helpers =====
+
+/**
+ * Draw a sales chart on a canvas element.
+ * @param {HTMLCanvasElement} canvas
+ * @param {Array<{date: string, total: number}>} data
+ */
+function drawSalesChart(canvas, data) {
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  const padding = 40;
+
+  // Clear canvas
+  ctx.clearRect(0, 0, width, height);
+
+  if (!data || data.length === 0) {
+    ctx.fillStyle = '#777783';
+    ctx.font = '14px Tahoma';
+    ctx.textAlign = 'center';
+    ctx.fillText('داده‌ای موجود نیست', width / 2, height / 2);
+    return;
+  }
+
+  // Calculate scales
+  const maxTotal = Math.max(...data.map(d => d.total));
+  const barWidth = (width - padding * 2) / data.length;
+  const barSpacing = barWidth * 0.2;
+
+  // Draw bars
+  data.forEach((item, index) => {
+    const x = padding + index * barWidth + barSpacing / 2;
+    const barHeight = (item.total / maxTotal) * (height - padding * 2);
+    const y = height - padding - barHeight;
+
+    // Bar gradient
+    const gradient = ctx.createLinearGradient(x, y, x, height - padding);
+    gradient.addColorStop(0, '#FF5548');
+    gradient.addColorStop(1, '#E8463A');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(x, y, barWidth - barSpacing, barHeight);
+
+    // Date label
+    ctx.fillStyle = '#777783';
+    ctx.font = '10px Tahoma';
+    ctx.textAlign = 'center';
+    const date = new Date(item.date);
+    ctx.fillText(`${date.getMonth() + 1}/${date.getDate()}`, x + (barWidth - barSpacing) / 2, height - padding + 15);
+
+    // Value label
+    ctx.fillStyle = '#302D43';
+    ctx.font = '11px Tahoma';
+    ctx.fillText(toPersianDigits(Math.round(item.total / 1000)) + 'k', x + (barWidth - barSpacing) / 2, y - 5);
+  });
+
+  // Draw axes
+  ctx.strokeStyle = '#E4E6EE';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padding, padding);
+  ctx.lineTo(padding, height - padding);
+  ctx.lineTo(width - padding, height - padding);
+  ctx.stroke();
+}
+
+/**
+ * Export data to CSV file.
+ * @param {Array<Object>} data
+ * @param {string} filename
+ */
+function exportToCSV(data, filename) {
+  if (!data || data.length === 0) {
+    showToast({ message: t('admin.noDataToExport') || 'داده‌ای برای خروجی وجود ندارد', variant: 'warning' });
+    return;
+  }
+
+  // Get headers from first object
+  const headers = Object.keys(data[0]);
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => headers.map(header => {
+      const value = row[header];
+      // Escape quotes and wrap in quotes if contains comma
+      const escaped = String(value || '').replace(/"/g, '""');
+      return escaped.includes(',') ? `"${escaped}"` : escaped;
+    }).join(','))
+  ].join('\n');
+
+  // Create blob and download
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${filename}-${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+
+  showToast({ message: t('admin.exportSuccess') || 'فایل با موفقیت دانلود شد', variant: 'success' });
 }
 
 // ===== SECTION 3: Products Page =====
@@ -120,12 +260,25 @@ async function renderProductsPage() {
 
   const header = createEl('div', { className: 'row row--between' });
   header.appendChild(createEl('h1', { textContent: t('admin.products') }));
+  
+  const headerActions = createEl('div', { className: 'row' });
+  
+  // Export CSV button
+  const exportBtn = createEl('button', {
+    className: 'btn btn--secondary',
+    textContent: t('admin.exportCSV') || 'خروجی CSV',
+    attrs: { type: 'button' },
+  });
+  headerActions.appendChild(exportBtn);
+  
   const addBtn = createEl('button', {
     className: 'btn btn--primary',
     textContent: '+ ' + t('admin.addProduct'),
     attrs: { type: 'button' },
   });
-  header.appendChild(addBtn);
+  headerActions.appendChild(addBtn);
+  
+  header.appendChild(headerActions);
   content.appendChild(header);
 
   const tableContainer = createEl('div');
@@ -204,6 +357,25 @@ async function renderProductsPage() {
     try {
       const brands = await catalog.listBrands();
       openProductModal(null, brands, refreshTable);
+    } catch (err) {
+      showToast({ message: err.message, variant: 'error' });
+    }
+  });
+
+  // Export CSV button
+  exportBtn.addEventListener('click', async () => {
+    try {
+      const { items } = await catalog.listProducts({ pageSize: 1000 });
+      const exportData = items.map(p => ({
+        name: p.name,
+        brand: p.brand?.name || '',
+        price: p.basePrice,
+        stock: p.variants?.reduce((s, v) => s + v.stock, 0) || 0,
+        slug: p.slug,
+        is_active: p.isActive ? 'فعال' : 'غیرفعال',
+        is_featured: p.isFeatured ? 'بله' : 'خیر',
+      }));
+      exportToCSV(exportData, 'products');
     } catch (err) {
       showToast({ message: err.message, variant: 'error' });
     }
@@ -499,11 +671,70 @@ async function renderSettingsPage() {
 
     formContainer.appendChild(logoSection);
 
+    // Maintenance mode checkbox
+    const maintenanceSection = createEl('div', { className: 'form-control' });
+    maintenanceSection.style.marginBlock = 'var(--space-6)';
+    maintenanceSection.style.padding = 'var(--space-4)';
+    maintenanceSection.style.background = 'var(--color-warning-soft)';
+    maintenanceSection.style.borderRadius = 'var(--radius-md)';
+    maintenanceSection.style.borderRight = '4px solid var(--color-warning)';
+    
+    const maintenanceLabel = createEl('label', { className: 'check' });
+    const maintenanceCheckbox = createEl('input', {
+      attrs: { type: 'checkbox', id: 'maintenance-mode' },
+    });
+    
+    // Load current maintenance mode setting
+    try {
+      const { data: maintenanceData } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'maintenance_mode')
+        .single();
+      
+      if (maintenanceData?.value === true) {
+        maintenanceCheckbox.checked = true;
+      }
+    } catch (err) {
+      // Setting doesn't exist yet, that's okay
+    }
+    
+    maintenanceLabel.appendChild(maintenanceCheckbox);
+    maintenanceLabel.appendChild(createEl('span', { 
+      textContent: t('admin.maintenanceMode') || 'حالت تعمیرات',
+      attrs: { style: 'font-weight: var(--weight-semibold);' }
+    }));
+    maintenanceSection.appendChild(maintenanceLabel);
+    
+    const maintenanceDesc = createEl('p', {
+      className: 'text-muted',
+      textContent: t('admin.maintenanceModeDesc') || 'با فعال کردن این گزینه، سایت به حالت تعمیرات می‌رود و کاربران عادی نمی‌توانند وارد شوند.',
+    });
+    maintenanceDesc.style.marginBlockStart = 'var(--space-2)';
+    maintenanceDesc.style.fontSize = 'var(--text-sm)';
+    maintenanceSection.appendChild(maintenanceDesc);
+    
+    formContainer.appendChild(maintenanceSection);
+
     // Settings form
     const form = renderSettingsForm(settings, async (data) => {
       try {
+        // Save maintenance mode setting
+        const maintenanceMode = maintenanceCheckbox.checked;
+        await supabase
+          .from('site_settings')
+          .upsert({ key: 'maintenance_mode', value: maintenanceMode });
+        
         await shopping.updateSiteSettings({ ...data, logoUrl: currentLogoUrl });
         showToast({ message: t('admin.settingsSaved'), variant: 'success' });
+        
+        if (maintenanceMode) {
+          showToast({ 
+            message: t('admin.maintenanceEnabled') || 'حالت تعمیرات فعال شد. کاربران عادی نمی‌توانند وارد سایت شوند.',
+            variant: 'warning',
+            duration: 5000,
+          });
+        }
       } catch (err) {
         showToast({ message: err.message, variant: 'error' });
       }

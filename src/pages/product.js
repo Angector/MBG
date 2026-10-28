@@ -5,11 +5,11 @@
 // ===== SECTION 0: Imports =====
 import { ROUTES } from '../config.js';
 import { t, applyTranslations } from '../i18n.js';
-import { $, createEl, parseQuery, formatPrice, toPersianDigits } from '../utils.js';
+import { $, $$, createEl, parseQuery, formatPrice, toPersianDigits, formatDate } from '../utils.js';
 import { cartStore, appStore, setWishlistCount } from '../state.js';
 import { getSession } from '../services/auth.service.js';
 import { getProductBySlug, getRelatedProducts } from '../services/catalog.service.js';
-import { addToWishlist, removeFromWishlist, getWishlistProductIds } from '../services/shopping.service.js';
+import { addToWishlist, removeFromWishlist, getWishlistProductIds, getProductReviews, submitReview, requestNotify } from '../services/shopping.service.js';
 import { renderImage, renderSkeleton, renderErrorState, showToast } from '../ui/primitives.js';
 import { renderGallery, renderVariantSelector, renderQuantityStepper, renderStickyBar, renderProductGrid } from '../ui/product.ui.js';
 import { flyToCart } from '../motion.js';
@@ -216,22 +216,30 @@ function renderInfoBlock() {
   // Action buttons
   const actions = createEl('div', { className: 'product-info__actions' });
 
-  // Add to cart button
-  const addToCartBtn = createEl('button', {
-    className: 'btn btn--primary btn--lg product-info__add-btn',
-    textContent: t('product.addToCart') || 'افزودن به سبد خرید',
-    attrs: { type: 'button' },
-    on: {
-      click: (e) => handleAddToCart(e.currentTarget, e),
-    },
-  });
-
+  // Add to cart button or notify me button
   if (!selectedVariant || selectedVariant.stock === 0) {
-    addToCartBtn.disabled = true;
-    addToCartBtn.textContent = t('product.outOfStock') || 'ناموجود';
+    // Show notify me button
+    const notifyBtn = createEl('button', {
+      className: 'btn btn--secondary btn--lg product-info__notify-btn',
+      textContent: t('product.notifyMe') || 'اطلاع‌رسانی موجودی',
+      attrs: { type: 'button' },
+      on: {
+        click: () => showNotifyForm(container),
+      },
+    });
+    actions.appendChild(notifyBtn);
+  } else {
+    // Show add to cart button
+    const addToCartBtn = createEl('button', {
+      className: 'btn btn--primary btn--lg product-info__add-btn',
+      textContent: t('product.addToCart') || 'افزودن به سبد خرید',
+      attrs: { type: 'button' },
+      on: {
+        click: (e) => handleAddToCart(e.currentTarget, e),
+      },
+    });
+    actions.appendChild(addToCartBtn);
   }
-
-  actions.appendChild(addToCartBtn);
 
   // Wishlist button
   const wishlistBtn = createEl('button', {
@@ -417,7 +425,7 @@ async function handleToggleWishlist(button) {
 // ===== SECTION 4: Tabs & Related =====
 
 /**
- * Render tabs for description and specs.
+ * Render tabs for description, specs, and reviews.
  */
 function renderTabs() {
   const tabs = $$('.product-tabs__tab');
@@ -434,6 +442,11 @@ function renderTabs() {
       // Update active panel
       panels.forEach(p => p.classList.remove('is-active'));
       $(`#tab-${tabId}`).classList.add('is-active');
+
+      // Load reviews when reviews tab is clicked
+      if (tabId === 'reviews') {
+        loadReviews();
+      }
     });
   });
 
@@ -461,6 +474,192 @@ function renderTabs() {
   } else {
     specsPanel.textContent = t('product.noSpecs') || 'مشخصاتی موجود نیست';
   }
+}
+
+/**
+ * Show notify me form for out-of-stock products.
+ * @param {HTMLElement} container
+ */
+function showNotifyForm(container) {
+  // Check if form already exists
+  if ($('#notify-form')) return;
+
+  const form = createEl('form', {
+    className: 'notify-form',
+    attrs: { id: 'notify-form' },
+  });
+
+  form.innerHTML = `
+    <p class="notify-form__message">${t('product.notifyMessage') || 'ایمیل خود را وارد کنید تا به محض موجود شدن اطلاع‌رسانی شود:'}</p>
+    <div class="notify-form__input-group">
+      <input type="email" class="input notify-form__input" placeholder="${t('placeholders.email') || 'ایمیل'}" required>
+      <button type="submit" class="btn btn--primary">${t('product.notifySubmit') || 'اطلاع بده'}</button>
+    </div>
+  `;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = form.querySelector('.notify-form__input').value.trim();
+
+    if (!email) {
+      showToast({ message: t('validation.email.required') || 'ایمیل الزامی است', variant: 'error' });
+      return;
+    }
+
+    try {
+      await requestNotify(product.id, email);
+      showToast({ message: t('product.notifySuccess') || 'اطلاع‌رسانی با موفقیت ثبت شد', variant: 'success' });
+      form.remove();
+    } catch (err) {
+      showToast({ message: err.message, variant: 'error' });
+    }
+  });
+
+  container.appendChild(form);
+}
+
+/**
+ * Load and render reviews.
+ */
+async function loadReviews() {
+  const container = $('#reviews-container');
+
+  try {
+    const reviews = await getProductReviews(product.id);
+
+    container.innerHTML = '';
+
+    // Review form (if logged in)
+    const { user } = await getSession();
+    if (user) {
+      const reviewForm = createReviewForm();
+      container.appendChild(reviewForm);
+    } else {
+      const loginPrompt = createEl('div', { className: 'reviews__login-prompt' });
+      loginPrompt.innerHTML = `
+        <p>${t('reviews.loginToReview') || 'برای ثبت نظر وارد شوید'}</p>
+        <a href="${ROUTES.auth}?redirect=${encodeURIComponent(window.location.href)}" class="btn btn--secondary">
+          ${t('nav.login') || 'ورود'}
+        </a>
+      `;
+      container.appendChild(loginPrompt);
+    }
+
+    // Reviews list
+    if (reviews.length === 0) {
+      const empty = createEl('div', { className: 'reviews__empty' });
+      empty.textContent = t('reviews.empty') || 'هنوز نظری ثبت نشده است';
+      container.appendChild(empty);
+    } else {
+      const reviewsList = createEl('div', { className: 'reviews__list' });
+      reviews.forEach((review) => {
+        const reviewEl = createEl('div', { className: 'review-card' });
+        reviewEl.innerHTML = `
+          <div class="review-card__header">
+            <div class="review-card__user">
+              <div class="review-card__avatar">${(review.user?.fullName || '?').charAt(0)}</div>
+              <div>
+                <div class="review-card__name">${review.user?.fullName || t('reviews.anonymous') || 'کاربر'}</div>
+                <div class="review-card__date">${formatDate(review.createdAt)}</div>
+              </div>
+            </div>
+            <div class="review-card__rating">
+              ${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}
+            </div>
+          </div>
+          ${review.comment ? `<div class="review-card__comment">${review.comment}</div>` : ''}
+        `;
+        reviewsList.appendChild(reviewEl);
+      });
+      container.appendChild(reviewsList);
+    }
+  } catch (err) {
+    console.error('Failed to load reviews:', err);
+    container.innerHTML = '';
+    container.appendChild(renderErrorState({
+      title: t('errors.loadReviews') || 'خطا در بارگذاری نظرات',
+      message: err.message,
+    }));
+  }
+}
+
+/**
+ * Create review form.
+ * @returns {HTMLElement}
+ */
+function createReviewForm() {
+  const form = createEl('form', {
+    className: 'review-form',
+    attrs: { id: 'review-form' },
+  });
+
+  form.innerHTML = `
+    <h3 class="review-form__title">${t('reviews.writeReview') || 'نظر خود را بنویسید'}</h3>
+    <div class="review-form__rating">
+      <label>${t('reviews.rating') || 'امتیاز'}:</label>
+      <div class="review-form__stars">
+        ${[1, 2, 3, 4, 5].map(i => `
+          <button type="button" class="review-form__star" data-rating="${i}" aria-label="${i} ${t('reviews.stars') || 'ستاره'}">
+            ★
+          </button>
+        `).join('')}
+      </div>
+      <input type="hidden" name="rating" value="0" required>
+    </div>
+    <div class="review-form__comment">
+      <label for="review-comment">${t('reviews.comment') || 'نظر'}:</label>
+      <textarea id="review-comment" name="comment" class="input" rows="4" placeholder="${t('reviews.commentPlaceholder') || 'نظر خود را بنویسید...'}"></textarea>
+    </div>
+    <button type="submit" class="btn btn--primary">${t('reviews.submit') || 'ارسال نظر'}</button>
+  `;
+
+  // Star rating interaction
+  const stars = form.querySelectorAll('.review-form__star');
+  const ratingInput = form.querySelector('input[name="rating"]');
+
+  stars.forEach((star) => {
+    star.addEventListener('click', () => {
+      const rating = parseInt(star.dataset.rating);
+      ratingInput.value = rating;
+
+      stars.forEach((s, i) => {
+        s.classList.toggle('is-active', i < rating);
+      });
+    });
+  });
+
+  // Form submission
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const rating = parseInt(ratingInput.value);
+    const comment = form.querySelector('#review-comment').value.trim();
+
+    if (rating === 0) {
+      showToast({ message: t('reviews.selectRating') || 'لطفاً امتیاز را انتخاب کنید', variant: 'error' });
+      return;
+    }
+
+    try {
+      await submitReview({
+        productId: product.id,
+        rating,
+        comment,
+      });
+
+      showToast({ message: t('reviews.success') || 'نظر شما با موفقیت ثبت شد', variant: 'success' });
+      form.reset();
+      stars.forEach(s => s.classList.remove('is-active'));
+      ratingInput.value = '0';
+
+      // Reload reviews
+      loadReviews();
+    } catch (err) {
+      showToast({ message: err.message, variant: 'error' });
+    }
+  });
+
+  return form;
 }
 
 /**

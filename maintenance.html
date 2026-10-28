@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>در حال بروزرسانی - موبوگرام</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Nian', Tahoma, sans-serif;
+      background: linear-gradient(135deg, #C8CEDF 0%, #FAFAFA 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 60px 40px;
+      border-radius: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo {
+      font-size: 48px;
+      font-weight: 700;
+      color: #FF5548;
+      margin-bottom: 20px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.9; }
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #302D43;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    p {
+      font-size: 18px;
+      color: #777783;
+      line-height: 1.8;
+      margin-bottom: 32px;
+    }
+
+    .loader {
+      display: inline-block;
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255, 85, 72, 0.2);
+      border-top-color: #FF5548;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .info {
+      margin-top: 40px;
+      padding: 20px;
+      background: rgba(255, 85, 72, 0.05);
+      border-radius: 12px;
+      border-right: 4px solid #FF5548;
+    }
+
+    .info p {
+      font-size: 14px;
+      color: #302D43;
+      margin: 0;
+    }
+
+    .contact {
+      margin-top: 32px;
+      font-size: 14px;
+      color: #777783;
+    }
+
+    .contact a {
+      color: #FF5548;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .contact a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 40px 24px;
+      }
+
+      .logo {
+        font-size: 36px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      p {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">موبوگرام</div>
+    <h1>به‌زودی برمی‌گردیم</h1>
+    <p>
+      سایت در حال بروزرسانی و بهبود است.<br>
+      لطفاً چند دقیقه دیگر مجدداً مراجعه کنید.
+    </p>
+    <div class="loader"></div>
+    <div class="info">
+      <p>
+        ما در حال اضافه کردن ویژگی‌های جدید و بهبود تجربه خرید شما هستیم.
+        از صبر و شکیبایی شما سپاسگزاریم.
+      </p>
+    </div>
+    <div class="contact">
+      <p>
+        سوالی دارید؟ با ما تماس بگیرید:<br>
+        <a href="mailto:support@mobogram.ir">support@mobogram.ir</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Auto-refresh every 30 seconds
+    setTimeout(() => {
+      window.location.reload();
+    }, 30000);
+  </script>
+</body>
+</html>

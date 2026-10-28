@@ -102,10 +102,16 @@
         <div class="product-tabs__nav">
           <button class="product-tabs__tab is-active" data-tab="description" data-i18n="product.description">توضیحات</button>
           <button class="product-tabs__tab" data-tab="specs" data-i18n="product.specs">مشخصات</button>
+          <button class="product-tabs__tab" data-tab="reviews" data-i18n="product.reviews">نظرات کاربران</button>
         </div>
         <div class="product-tabs__content">
           <div class="product-tabs__panel is-active" id="tab-description"></div>
           <div class="product-tabs__panel" id="tab-specs"></div>
+          <div class="product-tabs__panel" id="tab-reviews">
+            <div id="reviews-container">
+              <div class="skeleton skeleton--block" style="height: 200px;"></div>
+            </div>
+          </div>
         </div>
       </div>
 

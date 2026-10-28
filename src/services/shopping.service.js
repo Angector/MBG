@@ -645,6 +645,227 @@ export async function deleteImage(input) {
 /** Get public URL for a storage file. @param {string} bucket @param {string} path @returns {string} */
 export function getPublicUrl(bucket, path) {
   if (!bucket || !path) return '';
-  const {  publicUrl } = supabase.storage.from(bucket).getPublicUrl(path);
+  const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
   return publicUrl;
 }
+
+// ===== SECTION 11: Reviews =====
+/** @typedef {Object} Review */
+/** @property {string} id */
+/** @property {string} productId */
+/** @property {string} userId */
+/** @property {number} rating */
+/** @property {string} comment */
+/** @property {string} createdAt */
+
+/** @param {Object} raw @returns {Review} */
+const mapReview = (raw) => ({
+  id: raw.id,
+  productId: raw.product_id,
+  userId: raw.user_id,
+  rating: raw.rating,
+  comment: raw.comment,
+  createdAt: raw.created_at,
+  user: raw.profiles ? {
+    fullName: raw.profiles.full_name,
+  } : null,
+});
+
+/**
+ * Submit a review for a product.
+ * @param {Object} input
+ * @param {string} input.productId
+ * @param {number} input.rating - 1 to 5
+ * @param {string} [input.comment='']
+ * @returns {Promise<Review>}
+ * @throws {ValidationError} If inputs are invalid
+ * @throws {ConflictError} If user already reviewed this product
+ */
+export async function submitReview(input) {
+  const userId = await requireUserId();
+  
+  if (!input?.productId) throw new ValidationError('Product ID required', { meta: { field: 'productId' } });
+  if (!input?.rating || input.rating < 1 || input.rating > 5) {
+    throw new ValidationError('Rating must be between 1 and 5', { meta: { field: 'rating' } });
+  }
+  
+  const comment = input.comment || '';
+  
+  const { data, error } = await supabase
+    .from('reviews')
+    .insert({
+      product_id: input.productId,
+      user_id: userId,
+      rating: input.rating,
+      comment,
+    })
+    .select()
+    .single();
+  
+  if (error) {
+    if (error.code === '23505') {
+      throw new ConflictError('You have already reviewed this product', { meta: { field: 'productId' } });
+    }
+    throw fromSupabaseError(error, { resource: 'Review' });
+  }
+  
+  return mapReview(data);
+}
+
+/**
+ * Get all reviews for a product.
+ * @param {string} productId
+ * @returns {Promise<Review[]>}
+ */
+export async function getProductReviews(productId) {
+  if (!productId) throw new ValidationError('Product ID required');
+  
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('*, profiles(full_name)')
+    .eq('product_id', productId)
+    .order('created_at', { ascending: false });
+  
+  if (error) throw fromSupabaseError(error, { resource: 'Reviews' });
+  return (data || []).map(mapReview);
+}
+
+/**
+ * Get all reviews (admin only).
+ * @returns {Promise<Review[]>}
+ * @throws {PermissionError} If not admin
+ */
+export async function getAllReviews() {
+  await requireAdmin();
+  
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('*, profiles(full_name), products(name)')
+    .order('created_at', { ascending: false });
+  
+  if (error) throw fromSupabaseError(error, { resource: 'Reviews' });
+  return (data || []).map(mapReview);
+}
+
+/**
+ * Delete a review.
+ * @param {string} reviewId
+ * @returns {Promise<void>}
+ */
+export async function deleteReview(reviewId) {
+  if (!reviewId) throw new ValidationError('Review ID required');
+  
+  const { error } = await supabase
+    .from('reviews')
+    .delete()
+    .eq('id', reviewId);
+  
+  if (error) throw fromSupabaseError(error, { resource: 'Review' });
+}
+
+// ===== SECTION 12: Notification Requests =====
+/** @typedef {Object} NotifyRequest */
+/** @property {string} id */
+/** @property {string} productId */
+/** @property {string} email */
+/** @property {string} createdAt */
+
+/** @param {Object} raw @returns {NotifyRequest} */
+const mapNotifyRequest = (raw) => ({
+  id: raw.id,
+  productId: raw.product_id,
+  email: raw.email,
+  createdAt: raw.created_at,
+});
+
+/**
+ * Request notification when product is back in stock.
+ * @param {string} productId
+ * @param {string} email
+ * @returns {Promise<NotifyRequest>}
+ * @throws {ValidationError} If inputs are invalid
+ * @throws {ConflictError} If email already registered for this product
+ */
+export async function requestNotify(productId, email) {
+  if (!productId) throw new ValidationError('Product ID required');
+  if (!email) throw new ValidationError('Email required');
+  
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new ValidationError('Invalid email format', { meta: { field: 'email' } });
+  }
+  
+  const { data, error } = await supabase
+    .from('notify_requests')
+    .insert({
+      product_id: productId,
+      email,
+    })
+    .select()
+    .single();
+  
+  if (error) {
+    if (error.code === '23505') {
+      throw new ConflictError('This email is already registered for notifications', { meta: { field: 'email' } });
+    }
+    throw fromSupabaseError(error, { resource: 'NotifyRequest' });
+  }
+  
+  return mapNotifyRequest(data);
+}
+
+/**
+ * Get all notification requests for a product (admin only).
+ * @param {string} productId
+ * @returns {Promise<NotifyRequest[]>}
+ * @throws {PermissionError} If not admin
+ */
+export async function getProductNotifyRequests(productId) {
+  await requireAdmin();
+  
+  if (!productId) throw new ValidationError('Product ID required');
+  
+  const { data, error } = await supabase
+    .from('notify_requests')
+    .select('*')
+    .eq('product_id', productId)
+    .order('created_at', { ascending: false });
+  
+  if (error) throw fromSupabaseError(error, { resource: 'NotifyRequests' });
+  return (data || []).map(mapNotifyRequest);
+}
+
+/**
+ * Get all notification requests (admin only).
+ * @returns {Promise<NotifyRequest[]>}
+ * @throws {PermissionError} If not admin
+ */
+export async function getAllNotifyRequests() {
+  await requireAdmin();
+  
+  const { data, error } = await supabase
+    .from('notify_requests')
+    .select('*, products(name)')
+    .order('created_at', { ascending: false });
+  
+  if (error) throw fromSupabaseError(error, { resource: 'NotifyRequests' });
+  return (data || []).map(mapNotifyRequest);
+}
+
+/**
+ * Delete a notification request.
+ * @param {string} requestId
+ * @returns {Promise<void>}
+ */
+export async function deleteNotifyRequest(requestId) {
+  if (!requestId) throw new ValidationError('Request ID required');
+  
+  const { error } = await supabase
+    .from('notify_requests')
+    .delete()
+    .eq('id', requestId);
+  
+  if (error) throw fromSupabaseError(error, { resource: 'NotifyRequest' });
+}
+</replacement>
