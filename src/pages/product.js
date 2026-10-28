@@ -14,6 +14,7 @@ import { renderImage, renderSkeleton, renderErrorState, showToast } from '../ui/
 import { renderGallery, renderVariantSelector, renderQuantityStepper, renderStickyBar, renderProductGrid } from '../ui/product.ui.js';
 import { flyToCart } from '../motion.js';
 import { observeStickyVisibility } from '../observers.js';
+import { fireConfetti, applyMagneticEffect } from '../ui/motion-effects.js';
 
 // ===== SECTION 1: State & Init =====
 
@@ -40,6 +41,10 @@ async function init() {
   try {
     applyTranslations();
     initHeader();
+
+    // Apply magnetic effects to buttons
+    applyMagneticEffect('.btn--primary');
+    applyMagneticEffect('.sticky-bar .btn');
 
     // Load session for auth state
     try {
@@ -217,7 +222,7 @@ function renderInfoBlock() {
     textContent: t('product.addToCart') || 'افزودن به سبد خرید',
     attrs: { type: 'button' },
     on: {
-      click: (e) => handleAddToCart(e.currentTarget),
+      click: (e) => handleAddToCart(e.currentTarget, e),
     },
   });
 
@@ -325,7 +330,7 @@ function updateStockDisplay(stockDisplay) {
  * Handle add to cart with fly animation.
  * @param {HTMLElement} sourceButton
  */
-async function handleAddToCart(sourceButton) {
+async function handleAddToCart(sourceButton, event) {
   if (!selectedVariant || selectedVariant.stock === 0) {
     showToast({ message: t('product.outOfStock') || 'این محصول ناموجود است', variant: 'error' });
     return;
@@ -337,6 +342,11 @@ async function handleAddToCart(sourceButton) {
   }
 
   try {
+    // Fire confetti from button position
+    if (event && event.clientX && event.clientY) {
+      fireConfetti(event.clientX, event.clientY);
+    }
+
     // Add to cart
     cartStore.add({
       variantId: selectedVariant.id,
@@ -512,7 +522,7 @@ function setupStickyBar() {
     onAddToCart: () => {
       const addToCartBtn = $('.product-info__add-btn');
       if (addToCartBtn) {
-        handleAddToCart(addToCartBtn);
+        handleAddToCart(addToCartBtn, null);
       }
     },
   });

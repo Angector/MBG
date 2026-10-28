@@ -13,6 +13,7 @@ import { listBanners, getSiteSettings } from '../services/shopping.service.js';
 import { renderImage, renderSkeleton, renderErrorState, showToast } from '../ui/primitives.js';
 import { renderProductGrid } from '../ui/product.ui.js';
 import { observeReveal } from '../observers.js';
+import { applyTiltEffect, applyMagneticEffect, initScrollProgress, initTextReveal, navigateWithTransition } from '../ui/motion-effects.js';
 
 // ===== SECTION 1: Header & Global State Sync =====
 
@@ -250,7 +251,7 @@ async function loadFeatured() {
       },
       onAddToCart: (product) => {
         // Redirect to product page for variant selection
-        window.location.href = `pages/product.html?slug=${encodeURIComponent(product.slug)}`;
+        navigateWithTransition(`pages/product.html?slug=${encodeURIComponent(product.slug)}`);
       },
     });
 
@@ -258,6 +259,9 @@ async function loadFeatured() {
 
     // Apply reveal animation
     observeReveal(grid, { staggerStep: 60 });
+
+    // Apply 3D tilt effect to product cards
+    applyTiltEffect('.product-card');
   } catch (err) {
     console.error('Failed to load featured products:', err);
     container.innerHTML = '';
@@ -280,6 +284,9 @@ async function init() {
     initTheme();
     initPreloader();
 
+    // Initialize scroll progress bar
+    initScrollProgress();
+
     // Bind theme toggle button
     const themeBtn = $('#theme-btn');
     if (themeBtn) {
@@ -294,6 +301,12 @@ async function init() {
 
     // Apply translations
     applyTranslations();
+
+    // Apply magnetic effect to primary buttons
+    applyMagneticEffect('.btn--primary');
+
+    // Initialize text reveal for hero title
+    initTextReveal('.hero-title');
 
     // Load session for auth state
     try {

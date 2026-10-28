@@ -15,6 +15,7 @@ import { renderProductGrid } from '../ui/product.ui.js';
 import { renderFilterSheet } from '../ui/shopping.ui.js';
 import { renderSkeleton, renderEmptyState, renderErrorState, showToast } from '../ui/primitives.js';
 import { observeInfiniteScroll, observeReveal } from '../observers.js';
+import { applyTiltEffect, applyMagneticEffect, navigateWithTransition } from '../ui/motion-effects.js';
 
 // ===== SECTION 1: State & URL Parsing =====
 
@@ -113,6 +114,9 @@ async function init() {
   try {
     // Apply translations
     applyTranslations();
+
+    // Apply magnetic effect to primary buttons
+    applyMagneticEffect('.btn--primary');
 
     // Initialize header (reuse from home.js pattern)
     initHeader();
@@ -441,6 +445,9 @@ async function fetchProducts(reset = false) {
 
         // Apply reveal animation
         observeReveal(productGrid, { staggerStep: 60 });
+
+        // Apply 3D tilt effect to product cards
+        applyTiltEffect('.product-card');
       }
     } else {
       // Append to existing grid
@@ -453,6 +460,9 @@ async function fetchProducts(reset = false) {
         });
         grid.appendChild(productGrid);
         observeReveal(productGrid, { staggerStep: 60 });
+
+        // Apply 3D tilt effect to product cards
+        applyTiltEffect('.product-card');
       }
     }
 
