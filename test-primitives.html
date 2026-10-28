@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phase 10: UI Primitives Test</title>
+  <link rel="stylesheet" href="../src/styles/tokens.css">
+  <link rel="stylesheet" href="../src/styles/reset.css">
+  <link rel="stylesheet" href="../src/styles/base.css">
+  <link rel="stylesheet" href="../src/styles/components.css">
+  <link rel="stylesheet" href="../src/styles/advanced.css">
+  <link rel="stylesheet" href="../src/styles/animations.css">
+  <style>
+    body { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+    .test-section { margin: 3rem 0; padding: 2rem; border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+    .test-section h2 { margin-top: 0; color: var(--color-text); }
+    .demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .demo-item { padding: 1rem; background: var(--color-surface); border-radius: var(--radius-md); }
+    .demo-label { font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Phase 10: UI Primitives Verification</h1>
+  
+  <!-- Section 1: Image & Placeholder -->
+  <div class="test-section">
+    <h2>1. Image & Placeholder</h2>
+    <div class="demo-grid">
+      <div class="demo-item">
+        <div class="demo-label">With URL (lazy)</div>
+        <div id="img-with-url"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">Without URL (placeholder)</div>
+        <div id="img-no-url"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">Invalid URL (fallback)</div>
+        <div id="img-invalid-url"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Skeletons -->
+  <div class="test-section">
+    <h2>2. Skeletons</h2>
+    <div class="demo-grid">
+      <div class="demo-item">
+        <div class="demo-label">Card skeleton</div>
+        <div id="skeleton-card"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">Text skeleton (3 lines)</div>
+        <div id="skeleton-text"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">Circle skeleton</div>
+        <div id="skeleton-circle"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Empty & Error States -->
+  <div class="test-section">
+    <h2>3. Empty & Error States</h2>
+    <div class="demo-grid">
+      <div class="demo-item">
+        <div class="demo-label">Empty state</div>
+        <div id="empty-state"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">Error state</div>
+        <div id="error-state"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: Toast -->
+  <div class="test-section">
+    <h2>4. Toast Notifications</h2>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <button id="toast-success" class="btn btn--primary">Show Success Toast</button>
+      <button id="toast-error" class="btn btn--danger">Show Error Toast</button>
+      <button id="toast-warning" class="btn btn--secondary">Show Warning Toast</button>
+      <button id="toast-info" class="btn btn--ghost">Show Info Toast</button>
+      <button id="toast-multiple" class="btn btn--primary">Show 4 Toasts (queue test)</button>
+      <button id="toast-dismiss-all" class="btn btn--secondary">Dismiss All</button>
+    </div>
+  </div>
+
+  <!-- Section 5: Modal & Confirm -->
+  <div class="test-section">
+    <h2>5. Modal & Confirm Dialog</h2>
+    <div style="display: flex; gap: 0.5rem;">
+      <button id="modal-basic" class="btn btn--primary">Open Basic Modal</button>
+      <button id="modal-form" class="btn btn--secondary">Open Modal with Form</button>
+      <button id="confirm-dialog" class="btn btn--danger">Show Confirm Dialog</button>
+    </div>
+  </div>
+
+  <!-- Section 6: Dropdown & Tooltip -->
+  <div class="test-section">
+    <h2>6. Dropdown & Tooltip</h2>
+    <div style="display: flex; gap: 2rem; align-items: start;">
+      <div>
+        <div class="demo-label">Dropdown</div>
+        <div class="dropdown" id="dropdown-demo">
+          <button class="dropdown__trigger btn btn--secondary">
+            <span>Options</span>
+            <span class="dropdown__caret"></span>
+          </button>
+          <div class="dropdown__menu">
+            <button class="dropdown__item">Edit</button>
+            <button class="dropdown__item">Duplicate</button>
+            <button class="dropdown__item" disabled>Archive (disabled)</button>
+            <button class="dropdown__item">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="demo-label">Tooltip</div>
+        <div class="tooltip" id="tooltip-demo">
+          <button class="btn btn--secondary">Hover me</button>
+          <div class="tooltip__bubble">This is a tooltip</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 7: Rating -->
+  <div class="test-section">
+    <h2>7. Rating Display</h2>
+    <div class="demo-grid">
+      <div class="demo-item">
+        <div class="demo-label">4.5 stars (with count)</div>
+        <div id="rating-4-5"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">3 stars (no count)</div>
+        <div id="rating-3"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">0 stars (empty)</div>
+        <div id="rating-0"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      renderImage,
+      renderSkeleton,
+      renderEmptyState,
+      renderErrorState,
+      showToast,
+      dismissAllToasts,
+      showModal,
+      showConfirmDialog,
+      createDropdown,
+      createTooltip,
+      renderRating,
+    } from '../src/ui/primitives.js';
+
+    // ===== Section 1: Image tests =====
+    document.getElementById('img-with-url').appendChild(
+      renderImage({
+        url: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400',
+        alt: 'Sample phone',
+        aspectRatio: '1/1',
+      })
+    );
+
+    document.getElementById('img-no-url').appendChild(
+      renderImage({ url: null, alt: 'No image', aspectRatio: '1/1' })
+    );
+
+    document.getElementById('img-invalid-url').appendChild(
+      renderImage({ url: 'https://invalid-url-that-does-not-exist.com/image.jpg', alt: 'Invalid', aspectRatio: '1/1' })
+    );
+
+    // ===== Section 2: Skeleton tests =====
+    document.getElementById('skeleton-card').appendChild(renderSkeleton({ variant: 'card' }));
+    document.getElementById('skeleton-text').appendChild(renderSkeleton({ variant: 'text', lines: 3 }));
+    document.getElementById('skeleton-circle').appendChild(renderSkeleton({ variant: 'circle' }));
+
+    // ===== Section 3: Empty & Error states =====
+    document.getElementById('empty-state').appendChild(
+      renderEmptyState({
+        title: 'سبد خرید شما خالی است',
+        description: 'محصولی به سبد خرید اضافه نکرده‌اید',
+        icon: 'cart',
+        cta: { label: 'مشاهده محصولات', onClick: () => alert('Navigate to products') },
+      })
+    );
+
+    document.getElementById('error-state').appendChild(
+      renderErrorState({
+        title: 'خطا در بارگذاری',
+        message: 'لطفاً دوباره تلاش کنید',
+        onRetry: () => alert('Retrying...'),
+      })
+    );
+
+    // ===== Section 4: Toast tests =====
+    document.getElementById('toast-success').addEventListener('click', () => {
+      showToast({ title: 'موفق', message: 'عملیات با موفقیت انجام شد', variant: 'success' });
+    });
+
+    document.getElementById('toast-error').addEventListener('click', () => {
+      showToast({ title: 'خطا', message: 'مشکلی پیش آمد', variant: 'error', duration: 6000 });
+    });
+
+    document.getElementById('toast-warning').addEventListener('click', () => {
+      showToast({ title: 'هشدار', message: 'لطفاً توجه کنید', variant: 'warning' });
+    });
+
+    document.getElementById('toast-info').addEventListener('click', () => {
+      showToast({ message: 'این یک پیام اطلاعاتی است', variant: 'info' });
+    });
+
+    document.getElementById('toast-multiple').addEventListener('click', () => {
+      showToast({ message: 'Toast 1', variant: 'info' });
+      showToast({ message: 'Toast 2', variant: 'success' });
+      showToast({ message: 'Toast 3', variant: 'warning' });
+      showToast({ message: 'Toast 4 (queued)', variant: 'error' });
+    });
+
+    document.getElementById('toast-dismiss-all').addEventListener('click', () => {
+      dismissAllToasts();
+    });
+
+    // ===== Section 5: Modal tests =====
+    document.getElementById('modal-basic').addEventListener('click', () => {
+      const { close } = showModal({
+        title: 'مودال ساده',
+        body: '<p>این یک مودال ساده است. با Escape یا کلیک روی backdrop بسته می‌شود.</p>',
+        size: 'md',
+        onClose: () => console.log('Modal closed'),
+      });
+    });
+
+    document.getElementById('modal-form').addEventListener('click', () => {
+      const form = document.createElement('form');
+      form.innerHTML = `
+        <div class="form-control">
+          <label class="form-label">نام</label>
+          <input type="text" class="input" placeholder="نام خود را وارد کنید">
+        </div>
+        <div class="form-control">
+          <label class="form-label">ایمیل</label>
+          <input type="email" class="input" placeholder="email@example.com">
+        </div>
+      `;
+
+      const footer = document.createElement('div');
+      footer.className = 'row row--end';
+      footer.style.width = '100%';
+      footer.style.gap = 'var(--space-3)';
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'btn btn--ghost';
+      cancelBtn.textContent = 'انصراف';
+
+      const submitBtn = document.createElement('button');
+      submitBtn.className = 'btn btn--primary';
+      submitBtn.textContent = 'ذخیره';
+
+      footer.append(cancelBtn, submitBtn);
+
+      const { close } = showModal({
+        title: 'فرم نمونه',
+        body: form,
+        footer,
+        size: 'md',
+      });
+
+      cancelBtn.addEventListener('click', close);
+      submitBtn.addEventListener('click', () => {
+        showToast({ message: 'فرم ارسال شد', variant: 'success' });
+        close();
+      });
+    });
+
+    document.getElementById('confirm-dialog').addEventListener('click', async () => {
+      const confirmed = await showConfirmDialog({
+        title: 'تأیید حذف',
+        message: 'آیا مطمئن هستید که می‌خواهید این محصول را حذف کنید؟',
+        confirmLabel: 'بله، حذف کن',
+        cancelLabel: 'انصراف',
+        confirmVariant: 'danger',
+      });
+
+      if (confirmed) {
+        showToast({ message: 'محصول حذف شد', variant: 'success' });
+      } else {
+        showToast({ message: 'عملیات لغو شد', variant: 'info' });
+      }
+    });
+
+    // ===== Section 6: Dropdown & Tooltip tests =====
+    const dropdown = createDropdown(document.getElementById('dropdown-demo'), {
+      trigger: 'click',
+      onOpen: () => console.log('Dropdown opened'),
+      onClose: () => console.log('Dropdown closed'),
+    });
+
+    document.querySelectorAll('#dropdown-demo .dropdown__item').forEach(item => {
+      item.addEventListener('click', () => {
+        showToast({ message: `Selected: ${item.textContent}`, variant: 'info' });
+        dropdown.close();
+      });
+    });
+
+    const tooltip = createTooltip(document.getElementById('tooltip-demo'));
+
+    // ===== Section 7: Rating tests =====
+    document.getElementById('rating-4-5').appendChild(
+      renderRating({ value: 4.5, showCount: true, count: 128, size: 'md' })
+    );
+
+    document.getElementById('rating-3').appendChild(
+      renderRating({ value: 3, showValue: true, size: 'md' })
+    );
+
+    document.getElementById('rating-0').appendChild(
+      renderRating({ value: 0, size: 'md' })
+    );
+
+    console.log('✓ All UI primitives loaded and initialized');
+  </script>
+</body>
+</html>
