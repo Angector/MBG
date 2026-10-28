@@ -1,20 +1,24 @@
 // === FILE: src/pages/account.js ===
-// Project: Mobogram — Phase 15: Account Page
-// Purpose: Account page logic - profile, orders, wishlist, logout
+// Project: Mobogram — Phase 18: Account Page (Part 2)
+// Purpose: Account page logic - profile, orders with tracking, addresses, wishlist, logout
 
 // ===== SECTION 0: Imports =====
 import { ROUTES } from '../config.js';
 import { t, applyTranslations } from '../i18n.js';
-import { $, createEl, formatDate, formatPrice, toPersianDigits } from '../utils.js';
-import { appStore, cartStore, resetAppState } from '../state.js';
+import { $, $$, createEl, formatDate, formatPrice, toPersianDigits, initTheme, toggleTheme, initPreloader, localStorageAdapter } from '../utils.js';
+import { appStore, cartStore, setWishlistCount, resetAppState } from '../state.js';
 import { getSession, signOut } from '../services/auth.service.js';
 import { listMyOrders, listWishlist } from '../services/shopping.service.js';
 import { renderEmptyState, renderSkeleton, showToast } from '../ui/primitives.js';
 import { renderProductGrid } from '../ui/product.ui.js';
 
-// ===== SECTION 1: Init & Tab Switching =====
+// ===== SECTION 1: Constants =====
 
-/** @type {'profile'|'orders'|'wishlist'} */
+const ADDRESSES_KEY = 'mobogram.addresses';
+
+// ===== SECTION 2: Init & Tab Switching =====
+
+/** @type {'profile'|'orders'|'addresses'|'wishlist'} */
 let activeTab = 'profile';
 
 /**
@@ -23,6 +27,18 @@ let activeTab = 'profile';
  */
 async function init() {
   try {
+    // Initialize theme and preloader
+    initTheme();
+    initPreloader();
+
+    // Bind theme toggle button
+    const themeBtn = $('#theme-btn');
+    if (themeBtn) {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      themeBtn.textContent = isDark ? '☀️' : '🌙';
+      themeBtn.addEventListener('click', toggleTheme);
+    }
+
     applyTranslations();
     initHeader();
 
@@ -86,7 +102,7 @@ async function handleLogout() {
   }
 }
 
-// ===== SECTION 2: Render Tabs =====
+// ===== SECTION 3: Render Tabs =====
 
 /**
  * Render content for the active tab.
@@ -101,6 +117,9 @@ function renderTabContent() {
       break;
     case 'orders':
       renderOrdersTab(container);
+      break;
+    case 'addresses':
+      renderAddressesTab(container);
       break;
     case 'wishlist':
       renderWishlistTab(container);
@@ -178,7 +197,7 @@ async function renderProfileTab(container) {
 }
 
 /**
- * Render orders tab.
+ * Render orders tab with tracking stepper.
  * @param {HTMLElement} container
  */
 async function renderOrdersTab(container) {
@@ -231,6 +250,10 @@ async function renderOrdersTab(container) {
       header.appendChild(statusBadge);
 
       orderCard.appendChild(header);
+
+      // Order Tracking Stepper
+      const stepper = createOrderTrackingStepper(order.status);
+      orderCard.appendChild(stepper);
 
       // Date
       const date = createEl('div', { className: 'order-card__date' });
@@ -285,35 +308,304 @@ async function renderOrdersTab(container) {
 }
 
 /**
- * Get order status badge variant.
- * @param {string} status
- * @returns {string}
+ * Create order tracking stepper.
+ * @param {string} status - Current order status
+ * @returns {HTMLElement}
  */
-function getOrderStatusVariant(status) {
-  const variants = {
-    pending: 'warning',
-    confirmed: 'info',
-    shipped: 'info',
-    delivered: 'success',
-    cancelled: 'danger',
-  };
-  return variants[status] || 'neutral';
+function createOrderTrackingStepper(status) {
+  const steps = [
+    { key: 'pending', label: t('account.orderStatus.pending') || 'در انتظار تأیید' },
+    { key: 'confirmed', label: t('account.orderStatus.confirmed') || 'تأیید شده' },
+    { key: 'shipped', label: t('account.orderStatus.shipped') || 'ارسال شده' },
+    { key: 'delivered', label: t('account.orderStatus.delivered') || 'تحویل شده' },
+  ];
+
+  const statusOrder = ['pending', 'confirmed', 'shipped', 'delivered'];
+  const currentStepIndex = statusOrder.indexOf(status);
+
+  const stepper = createEl('div', { className: 'order-tracking-stepper' });
+
+  steps.forEach((step, index) => {
+    const stepEl = createEl('div', { className: 'order-tracking-step' });
+
+    // Circle
+    const circle = createEl('div', { className: 'order-tracking-step__circle' });
+    if (index <= currentStepIndex) {
+      circle.classList.add('is-completed');
+      if (index === currentStepIndex) {
+        circle.classList.add('is-current');
+      }
+      circle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    } else {
+      circle.textContent = toPersianDigits(String(index + 1));
+    }
+    stepEl.appendChild(circle);
+
+    // Label
+    const label = createEl('div', {
+      className: 'order-tracking-step__label',
+      textContent: step.label,
+    });
+    stepEl.appendChild(label);
+
+    // Connector (except last)
+    if (index < steps.length - 1) {
+      const connector = createEl('div', { className: 'order-tracking-step__connector' });
+      if (index < currentStepIndex) {
+        connector.classList.add('is-completed');
+      }
+      stepEl.appendChild(connector);
+    }
+
+    stepper.appendChild(stepEl);
+  });
+
+  return stepper;
 }
 
 /**
- * Get order status text.
- * @param {string} status
- * @returns {string}
+ * Render addresses tab.
+ * @param {HTMLElement} container
  */
-function getOrderStatusText(status) {
-  const texts = {
-    pending: t('account.orderStatus.pending') || 'در انتظار تأیید',
-    confirmed: t('account.orderStatus.confirmed') || 'تأیید شده',
-    shipped: t('account.orderStatus.shipped') || 'ارسال شده',
-    delivered: t('account.orderStatus.delivered') || 'تحویل شده',
-    cancelled: t('account.orderStatus.cancelled') || 'لغو شده',
-  };
-  return texts[status] || status;
+function renderAddressesTab(container) {
+  container.innerHTML = '';
+
+  const title = createEl('h2', {
+    className: 'addresses-title',
+    textContent: t('account.addresses') || 'آدرس‌ها',
+  });
+  container.appendChild(title);
+
+  // Add address button
+  const addBtn = createEl('button', {
+    className: 'btn btn--primary',
+    textContent: '+ ' + (t('account.addAddress') || 'افزودن آدرس'),
+    attrs: { type: 'button' },
+    on: { click: () => showAddAddressForm(container) },
+  });
+  container.appendChild(addBtn);
+
+  // Load addresses
+  const addresses = loadAddresses();
+
+  if (addresses.length === 0) {
+    const empty = renderEmptyState({
+      title: t('empty.addresses') || 'آدرسی ثبت نشده',
+      description: t('empty.addressesHint') || 'هنوز آدرسی ثبت نکرده‌اید',
+      icon: 'box',
+    });
+    container.appendChild(empty);
+    return;
+  }
+
+  const addressesList = createEl('div', { className: 'addresses-list' });
+
+  addresses.forEach((address, index) => {
+    const addressCard = createEl('div', { className: 'address-card' });
+
+    const info = createEl('div', { className: 'address-card__info' });
+    info.appendChild(createEl('p', {
+      className: 'address-card__name',
+      textContent: address.name,
+    }));
+    info.appendChild(createEl('p', {
+      className: 'address-card__phone',
+      textContent: address.phone,
+    }));
+    info.appendChild(createEl('p', {
+      className: 'address-card__address',
+      textContent: `${address.province}، ${address.city}، ${address.street}`,
+    }));
+    info.appendChild(createEl('p', {
+      className: 'address-card__postal',
+      textContent: `کد پستی: ${toPersianDigits(address.postalCode)}`,
+    }));
+    addressCard.appendChild(info);
+
+    const actions = createEl('div', { className: 'address-card__actions' });
+    const deleteBtn = createEl('button', {
+      className: 'btn btn--danger btn--sm',
+      textContent: t('common.delete') || 'حذف',
+      attrs: { type: 'button' },
+      on: {
+        click: () => {
+          deleteAddress(index);
+          renderAddressesTab(container);
+          showToast({ message: t('address.deleted') || 'آدرس حذف شد', variant: 'success' });
+        },
+      },
+    });
+    actions.appendChild(deleteBtn);
+    addressCard.appendChild(actions);
+
+    addressesList.appendChild(addressCard);
+  });
+
+  container.appendChild(addressesList);
+}
+
+/**
+ * Show add address form.
+ * @param {HTMLElement} container
+ */
+function showAddAddressForm(container) {
+  container.innerHTML = '';
+
+  const title = createEl('h2', {
+    className: 'addresses-title',
+    textContent: t('account.addAddress') || 'افزودن آدرس',
+  });
+  container.appendChild(title);
+
+  const form = createEl('form', { className: 'address-form' });
+
+  // Name
+  const nameField = createEl('div', { className: 'form-control' });
+  nameField.appendChild(createEl('label', { className: 'form-label', textContent: t('address.name') || 'نام گیرنده' }));
+  const nameInput = createEl('input', {
+    className: 'input',
+    attrs: { type: 'text', id: 'address-name', required: '' },
+  });
+  nameField.appendChild(nameInput);
+  form.appendChild(nameField);
+
+  // Phone
+  const phoneField = createEl('div', { className: 'form-control' });
+  phoneField.appendChild(createEl('label', { className: 'form-label', textContent: t('address.phone') || 'شماره تماس' }));
+  const phoneInput = createEl('input', {
+    className: 'input',
+    attrs: { type: 'tel', id: 'address-phone', required: '', pattern: '09[0-9]{9}' },
+  });
+  phoneField.appendChild(phoneInput);
+  form.appendChild(phoneField);
+
+  // Province
+  const provinceField = createEl('div', { className: 'form-control' });
+  provinceField.appendChild(createEl('label', { className: 'form-label', textContent: t('address.province') || 'استان' }));
+  const provinceInput = createEl('input', {
+    className: 'input',
+    attrs: { type: 'text', id: 'address-province', required: '' },
+  });
+  provinceField.appendChild(provinceInput);
+  form.appendChild(provinceField);
+
+  // City
+  const cityField = createEl('div', { className: 'form-control' });
+  cityField.appendChild(createEl('label', { className: 'form-label', textContent: t('address.city') || 'شهر' }));
+  const cityInput = createEl('input', {
+    className: 'input',
+    attrs: { type: 'text', id: 'address-city', required: '' },
+  });
+  cityField.appendChild(cityInput);
+  form.appendChild(cityField);
+
+  // Street
+  const streetField = createEl('div', { className: 'form-control' });
+  streetField.appendChild(createEl('label', { className: 'form-label', textContent: t('address.street') || 'آدرس' }));
+  const streetInput = createEl('textarea', {
+    className: 'input',
+    attrs: { id: 'address-street', required: '', rows: '3' },
+  });
+  streetField.appendChild(streetInput);
+  form.appendChild(streetField);
+
+  // Postal Code
+  const postalField = createEl('div', { className: 'form-control' });
+  postalField.appendChild(createEl('label', { className: 'form-label', textContent: t('address.postalCode') || 'کد پستی' }));
+  const postalInput = createEl('input', {
+    className: 'input',
+    attrs: { type: 'text', id: 'address-postal-code', required: '', pattern: '[0-9]{10}' },
+  });
+  postalField.appendChild(postalInput);
+  form.appendChild(postalField);
+
+  // Buttons
+  const actions = createEl('div', { className: 'form-actions' });
+  actions.appendChild(createEl('button', {
+    className: 'btn btn--ghost',
+    textContent: t('common.cancel') || 'انصراف',
+    attrs: { type: 'button' },
+    on: { click: () => renderAddressesTab(container) },
+  }));
+  actions.appendChild(createEl('button', {
+    className: 'btn btn--primary',
+    textContent: t('common.save') || 'ذخیره',
+    attrs: { type: 'submit' },
+  }));
+  form.appendChild(actions);
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const name = nameInput.value.trim();
+    const phone = phoneInput.value.trim();
+    const province = provinceInput.value.trim();
+    const city = cityInput.value.trim();
+    const street = streetInput.value.trim();
+    const postalCode = postalInput.value.trim();
+
+    if (!name || !phone || !province || !city || !street || !postalCode) {
+      showToast({ message: t('address.fillRequired') || 'لطفاً تمام فیلدها را پر کنید', variant: 'error' });
+      return;
+    }
+
+    if (!/^09[0-9]{9}$/.test(phone)) {
+      showToast({ message: t('validation.phone.invalid') || 'شماره موبایل نامعتبر است', variant: 'error' });
+      return;
+    }
+
+    if (!/^[0-9]{10}$/.test(postalCode)) {
+      showToast({ message: t('validation.postalCode.invalid') || 'کد پستی نامعتبر است', variant: 'error' });
+      return;
+    }
+
+    saveAddress({ name, phone, province, city, street, postalCode });
+    showToast({ message: t('address.added') || 'آدرس با موفقیت اضافه شد', variant: 'success' });
+    renderAddressesTab(container);
+  });
+
+  container.appendChild(form);
+}
+
+/**
+ * Load addresses from localStorage.
+ * @returns {Array}
+ */
+function loadAddresses() {
+  try {
+    const data = localStorageAdapter.getJSON(ADDRESSES_KEY);
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Save address to localStorage.
+ * @param {Object} address
+ */
+function saveAddress(address) {
+  try {
+    const addresses = loadAddresses();
+    addresses.push(address);
+    localStorageAdapter.setJSON(ADDRESSES_KEY, addresses);
+  } catch (err) {
+    console.error('Failed to save address:', err);
+  }
+}
+
+/**
+ * Delete address from localStorage.
+ * @param {number} index
+ */
+function deleteAddress(index) {
+  try {
+    const addresses = loadAddresses();
+    addresses.splice(index, 1);
+    localStorageAdapter.setJSON(ADDRESSES_KEY, addresses);
+  } catch (err) {
+    console.error('Failed to delete address:', err);
+  }
 }
 
 /**
@@ -390,7 +682,7 @@ async function renderWishlistTab(container) {
   }
 }
 
-// ===== SECTION 3: Header =====
+// ===== SECTION 4: Header =====
 
 /**
  * Initialize header with cart/wishlist counts.
@@ -426,7 +718,41 @@ function initHeader() {
   });
 }
 
-// ===== SECTION 4: Start =====
+// ===== SECTION 5: Helpers =====
+
+/**
+ * Get order status badge variant.
+ * @param {string} status
+ * @returns {string}
+ */
+function getOrderStatusVariant(status) {
+  const variants = {
+    pending: 'warning',
+    confirmed: 'info',
+    shipped: 'info',
+    delivered: 'success',
+    cancelled: 'danger',
+  };
+  return variants[status] || 'neutral';
+}
+
+/**
+ * Get order status text.
+ * @param {string} status
+ * @returns {string}
+ */
+function getOrderStatusText(status) {
+  const texts = {
+    pending: t('account.orderStatus.pending') || 'در انتظار تأیید',
+    confirmed: t('account.orderStatus.confirmed') || 'تأیید شده',
+    shipped: t('account.orderStatus.shipped') || 'ارسال شده',
+    delivered: t('account.orderStatus.delivered') || 'تحویل شده',
+    cancelled: t('account.orderStatus.cancelled') || 'لغو شده',
+  };
+  return texts[status] || status;
+}
+
+// ===== SECTION 6: Start =====
 
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {

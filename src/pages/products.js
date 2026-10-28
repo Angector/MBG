@@ -5,14 +5,13 @@
 // ===== SECTION 0: Imports =====
 import { ROUTES, PAGE_SIZE } from '../config.js';
 import { t, applyTranslations } from '../i18n.js';
-import { $, createEl, parseQuery, buildQuery, withQuery, toPersianDigits } from '../utils.js';
-import { debounce } from '../utils.js';
+import { $, $$, createEl, parseQuery, buildQuery, withQuery, toPersianDigits, debounce, formatPrice, initTheme, toggleTheme, initPreloader } from '../utils.js';
 import { cartStore, appStore, setWishlistCount } from '../state.js';
 import { getSession } from '../services/auth.service.js';
 import { listProducts, listBrands, getPriceBounds } from '../services/catalog.service.js';
 import { getWishlistProductIds, addToWishlist, removeFromWishlist } from '../services/shopping.service.js';
 import { renderProductGrid } from '../ui/product.ui.js';
-import { renderFilterSheet } from '../ui/shopping.ui.js';
+import { renderFilterSheet, renderQuickViewModal } from '../ui/shopping.ui.js';
 import { renderSkeleton, renderEmptyState, renderErrorState, showToast } from '../ui/primitives.js';
 import { observeInfiniteScroll, observeReveal } from '../observers.js';
 import { applyTiltEffect, applyMagneticEffect, navigateWithTransition } from '../ui/motion-effects.js';
@@ -112,6 +111,18 @@ function updateURL() {
  */
 async function init() {
   try {
+    // Initialize theme and preloader
+    initTheme();
+    initPreloader();
+
+    // Bind theme toggle button
+    const themeBtn = $('#theme-btn');
+    if (themeBtn) {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      themeBtn.textContent = isDark ? '☀️' : '🌙';
+      themeBtn.addEventListener('click', toggleTheme);
+    }
+
     // Apply translations
     applyTranslations();
 
@@ -120,6 +131,9 @@ async function init() {
 
     // Initialize header (reuse from home.js pattern)
     initHeader();
+
+    // Initialize instant search
+    initInstantSearch();
 
     // Parse initial filters from URL
     currentFilter = parseFiltersFromURL();
@@ -439,6 +453,7 @@ async function fetchProducts(reset = false) {
           wishlistedIds,
           onToggleWishlist: handleToggleWishlist,
           onAddToCart: handleAddToCart,
+          onQuickView: handleQuickView,
           stagger: true,
         });
         grid.appendChild(productGrid);
@@ -456,6 +471,7 @@ async function fetchProducts(reset = false) {
           wishlistedIds,
           onToggleWishlist: handleToggleWishlist,
           onAddToCart: handleAddToCart,
+          onQuickView: handleQuickView,
           stagger: true,
         });
         grid.appendChild(productGrid);
@@ -606,6 +622,124 @@ function setupInfiniteScroll() {
 }
 
 // ===== SECTION 6: Interactions =====
+
+/**
+ * Handle quick view modal.
+ * @param {import('../types.js').ProductWithVariants} product
+ */
+function handleQuickView(product) {
+  const modal = renderQuickViewModal(product, {
+    onAddToCart: (product, variantId) => {
+      const variant = product.variants.find(v => v.id === variantId);
+      if (!variant) {
+        showToast({ message: t('errors.variantNotFound') || 'مدل محصول یافت نشد', variant: 'error' });
+        return;
+      }
+
+      cartStore.add({
+        variantId: variant.id,
+        productId: product.id,
+        productSlug: product.slug,
+        productName: product.name,
+        brandName: product.brand?.name || '',
+        imageUrl: product.images?.[0] || null,
+        storage: variant.storage,
+        color: variant.color,
+        unitPrice: variant.price,
+        qty: 1,
+      });
+
+      showToast({ message: t('product.addedToCart') || 'به سبد خرید اضافه شد', variant: 'success' });
+    },
+  });
+
+  document.body.appendChild(modal.element);
+  modal.open();
+}
+
+/**
+ * Initialize instant search functionality.
+ */
+function initInstantSearch() {
+  const searchInput = $('#instant-search');
+  const dropdown = $('#search-dropdown');
+
+  if (!searchInput || !dropdown) return;
+
+  const performSearch = debounce(async (query) => {
+    if (!query || query.trim().length < 2) {
+      dropdown.classList.add('hidden');
+      return;
+    }
+
+    try {
+      const { items } = await listProducts({
+        searchQuery: query.trim(),
+        pageSize: 5,
+      });
+
+      if (!items || items.length === 0) {
+        dropdown.innerHTML = `<div class="search-dropdown__empty">${t('common.noResults') || 'نتیجه‌ای یافت نشد'}</div>`;
+        dropdown.classList.remove('hidden');
+        return;
+      }
+
+      dropdown.innerHTML = '';
+      items.forEach((product) => {
+        const item = createEl('a', {
+          className: 'search-dropdown__item',
+          attrs: { href: `product.html?slug=${encodeURIComponent(product.slug)}` },
+        });
+
+        const img = renderImage({
+          url: product.images?.[0] || null,
+          alt: product.name,
+          aspectRatio: '1/1',
+        });
+        img.style.width = '50px';
+        img.style.height = '50px';
+        item.appendChild(img);
+
+        const info = createEl('div', { className: 'search-dropdown__info' });
+        info.appendChild(createEl('div', {
+          className: 'search-dropdown__name',
+          textContent: product.name,
+        }));
+        info.appendChild(createEl('div', {
+          className: 'search-dropdown__price',
+          textContent: formatPrice(product.basePrice),
+        }));
+        item.appendChild(info);
+
+        dropdown.appendChild(item);
+      });
+
+      dropdown.classList.remove('hidden');
+    } catch (err) {
+      console.error('Search failed:', err);
+      dropdown.classList.add('hidden');
+    }
+  }, 300);
+
+  searchInput.addEventListener('input', (e) => {
+    performSearch(e.target.value);
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
+
+  // Close dropdown on escape
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      dropdown.classList.add('hidden');
+      searchInput.blur();
+    }
+  });
+}
 
 /**
  * Handle wishlist toggle with optimistic UI update.

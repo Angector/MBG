@@ -5,15 +5,17 @@
 // ===== SECTION 0: Imports =====
 import { ROUTES, BUCKETS } from '../config.js';
 import { t, applyTranslations } from '../i18n.js';
-import { $, createEl, show, hide, toPersianDigits, initTheme, toggleTheme, initPreloader } from '../utils.js';
+import { $, $$, createEl, show, hide, toPersianDigits, initTheme, toggleTheme, initPreloader, debounce, formatPrice, localStorageAdapter } from '../utils.js';
 import { appStore, cartStore, setWishlistCount, selectCartCount } from '../state.js';
 import { getSession, onAuthStateChange } from '../services/auth.service.js';
-import { getFeaturedProducts, listBrands } from '../services/catalog.service.js';
+import { getFeaturedProducts, listBrands, listProducts } from '../services/catalog.service.js';
 import { listBanners, getSiteSettings } from '../services/shopping.service.js';
 import { renderImage, renderSkeleton, renderErrorState, showToast } from '../ui/primitives.js';
 import { renderProductGrid } from '../ui/product.ui.js';
 import { observeReveal } from '../observers.js';
 import { applyTiltEffect, applyMagneticEffect, initScrollProgress, initTextReveal, navigateWithTransition } from '../ui/motion-effects.js';
+
+const RECENT_KEY = 'mobogram.recent';
 
 // ===== SECTION 1: Header & Global State Sync =====
 
@@ -272,7 +274,175 @@ async function loadFeatured() {
   }
 }
 
-// ===== SECTION 5: Initialization =====
+// ===== SECTION 5: Instant Search =====
+
+/**
+ * Initialize instant search functionality.
+ * Wires up search input with debounced API calls and dropdown results.
+ */
+function initInstantSearch() {
+  const searchInput = $('#instant-search');
+  const dropdown = $('#search-dropdown');
+
+  if (!searchInput || !dropdown) return;
+
+  const performSearch = debounce(async (query) => {
+    if (!query || query.trim().length < 2) {
+      dropdown.classList.add('hidden');
+      return;
+    }
+
+    try {
+      const { items } = await listProducts({
+        searchQuery: query.trim(),
+        pageSize: 5,
+      });
+
+      if (!items || items.length === 0) {
+        dropdown.innerHTML = `<div class="search-dropdown__empty">${t('common.noResults') || 'نتیجه‌ای یافت نشد'}</div>`;
+        dropdown.classList.remove('hidden');
+        return;
+      }
+
+      dropdown.innerHTML = '';
+      items.forEach((product) => {
+        const item = createEl('a', {
+          className: 'search-dropdown__item',
+          attrs: { href: `pages/product.html?slug=${encodeURIComponent(product.slug)}` },
+        });
+
+        const img = renderImage({
+          url: product.images?.[0] || null,
+          alt: product.name,
+          aspectRatio: '1/1',
+        });
+        img.style.width = '50px';
+        img.style.height = '50px';
+        item.appendChild(img);
+
+        const info = createEl('div', { className: 'search-dropdown__info' });
+        info.appendChild(createEl('div', {
+          className: 'search-dropdown__name',
+          textContent: product.name,
+        }));
+        info.appendChild(createEl('div', {
+          className: 'search-dropdown__price',
+          textContent: formatPrice(product.basePrice),
+        }));
+        item.appendChild(info);
+
+        dropdown.appendChild(item);
+      });
+
+      dropdown.classList.remove('hidden');
+    } catch (err) {
+      console.error('Search failed:', err);
+      dropdown.classList.add('hidden');
+    }
+  }, 300);
+
+  searchInput.addEventListener('input', (e) => {
+    performSearch(e.target.value);
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
+
+  // Close dropdown on escape
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      dropdown.classList.add('hidden');
+      searchInput.blur();
+    }
+  });
+}
+
+// ===== SECTION 6: Recently Viewed =====
+
+/**
+ * Load and render recently viewed products.
+ * Reads from localStorage and displays a section at the bottom.
+ */
+async function loadRecentlyViewed() {
+  try {
+    const recentIds = localStorageAdapter.getJSON(RECENT_KEY) || [];
+    if (!recentIds || recentIds.length === 0) return;
+
+    // Fetch products by IDs (we'll need to fetch each one)
+    const products = [];
+    for (const slug of recentIds.slice(0, 4)) {
+      try {
+        const product = await import('../services/catalog.service.js').then(m => m.getProductBySlug(slug));
+        if (product) products.push(product);
+      } catch (err) {
+        // Skip products that can't be loaded
+      }
+    }
+
+    if (products.length === 0) return;
+
+    // Create section
+    const main = $('#main');
+    const section = createEl('section', { className: 'recent-section' });
+    const container = createEl('div', { className: 'container' });
+
+    container.appendChild(createEl('h2', {
+      className: 'section-title',
+      textContent: t('home.recentlyViewed') || 'بازدیدهای اخیر',
+    }));
+
+    const grid = createEl('div', { className: 'recent-grid' });
+
+    // Get wishlist IDs if user is logged in
+    let wishlistedIds = new Set();
+    try {
+      const { getWishlistProductIds } = await import('../services/shopping.service.js');
+      wishlistedIds = await getWishlistProductIds();
+    } catch (err) {
+      // User not logged in or error - continue without wishlist
+    }
+
+    const productGrid = renderProductGrid(products, {
+      wishlistedIds,
+      onToggleWishlist: async (productId) => {
+        try {
+          const { addToWishlist, removeFromWishlist } = await import('../services/shopping.service.js');
+          if (wishlistedIds.has(productId)) {
+            await removeFromWishlist(productId);
+            wishlistedIds.delete(productId);
+            showToast({ message: t('wishlist.removed'), variant: 'success' });
+          } else {
+            await addToWishlist(productId);
+            wishlistedIds.add(productId);
+            showToast({ message: t('wishlist.added'), variant: 'success' });
+          }
+          setWishlistCount(wishlistedIds.size);
+        } catch (err) {
+          showToast({ message: err.message, variant: 'error' });
+        }
+      },
+      onAddToCart: (product) => {
+        navigateWithTransition(`pages/product.html?slug=${encodeURIComponent(product.slug)}`);
+      },
+    });
+
+    grid.appendChild(productGrid);
+    container.appendChild(grid);
+    section.appendChild(container);
+    main.appendChild(section);
+
+    // Apply reveal animation
+    observeReveal(section, { staggerStep: 60 });
+  } catch (err) {
+    console.error('Failed to load recently viewed:', err);
+  }
+}
+
+// ===== SECTION 7: Initialization =====
 
 /**
  * Initialize homepage on DOMContentLoaded.
@@ -299,6 +469,9 @@ async function init() {
     // Initialize header first
     initHeader();
 
+    // Initialize instant search
+    initInstantSearch();
+
     // Apply translations
     applyTranslations();
 
@@ -321,6 +494,9 @@ async function init() {
       loadBrands(),
       loadFeatured(),
     ]);
+
+    // Load recently viewed products
+    loadRecentlyViewed();
   } catch (err) {
     console.error('Failed to initialize homepage:', err);
     showToast({ message: t('errors.initFailed') || 'خطا در بارگذاری صفحه', variant: 'error' });

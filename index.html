@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="styles/advanced.css">
   <link rel="stylesheet" href="styles/animations.css">
   <link rel="stylesheet" href="styles/pages.css">
+  <link rel="stylesheet" href="styles/polish.css">
   <link rel="stylesheet" href="styles/dark-mode.css">
   <link rel="stylesheet" href="styles/preloader.css">
   <script type="module" src="src/pages/home.js"></script>
@@ -37,12 +38,10 @@
       <div class="site-header__actions">
         <button id="theme-btn" class="btn btn--icon theme-toggle" aria-label="تغییر تم" data-i18n-aria-label="common.toggleTheme">🌙</button>
 
-        <button class="btn btn--icon btn--ghost" aria-label="جستجو" data-i18n-aria-label="nav.search">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.3-4.3"></path>
-          </svg>
-        </button>
+        <div class="search-wrapper">
+          <input type="search" id="instant-search" class="input input--search" placeholder="جستجو..." data-i18n-placeholder="common.search">
+          <div id="search-dropdown" class="dropdown-menu hidden"></div>
+        </div>
 
         <button class="btn btn--icon btn--ghost site-header__wishlist-btn" aria-label="علاقه‌مندی‌ها" data-i18n-aria-label="nav.wishlist">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
