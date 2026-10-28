@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="nav.products">محصولات - موبوگرام</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/reset.css">
+  <link rel="stylesheet" href="../styles/base.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/advanced.css">
+  <link rel="stylesheet" href="../styles/animations.css">
+  <link rel="stylesheet" href="../styles/pages.css">
+  <script type="module" src="../src/pages/products.js"></script>
+</head>
+<body>
+  <a href="#main" class="skip-link" data-i18n="common.skipToContent">پرش به محتوای اصلی</a>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <div class="site-header__logo">
+        <a href="../index.html" data-i18n="site.brandName">موبوگرام</a>
+      </div>
+
+      <nav class="site-header__nav">
+        <ul class="site-header__nav-list">
+          <li><a href="../index.html" data-i18n="nav.home">خانه</a></li>
+          <li><a href="products.html" class="is-active" data-i18n="nav.products">محصولات</a></li>
+          <li><a href="brands.html" data-i18n="nav.brands">برندها</a></li>
+          <li><a href="contact.html" data-i18n="nav.contact">تماس با ما</a></li>
+        </ul>
+      </nav>
+
+      <div class="site-header__actions">
+        <button class="btn btn--icon btn--ghost" aria-label="جستجو" data-i18n-aria-label="nav.search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+        </button>
+
+        <button class="btn btn--icon btn--ghost site-header__wishlist-btn" aria-label="علاقه‌مندی‌ها" data-i18n-aria-label="nav.wishlist">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+          <span class="badge badge--floating site-header__wishlist-count" hidden>۰</span>
+        </button>
+
+        <button class="btn btn--icon btn--ghost site-header__cart-btn" aria-label="سبد خرید" data-i18n-aria-label="nav.cart">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span class="badge badge--floating site-header__cart-count" hidden>۰</span>
+        </button>
+
+        <a href="auth.html" class="btn btn--secondary site-header__auth-btn" data-i18n="nav.login">ورود</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="container">
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <ol class="breadcrumb__list">
+        <li class="breadcrumb__item"><a href="../index.html" data-i18n="nav.home">خانه</a></li>
+        <li class="breadcrumb__item" aria-current="page" data-i18n="nav.products">محصولات</li>
+      </ol>
+    </nav>
+
+    <div class="products-header">
+      <h1 class="products-header__title" data-i18n="nav.products">محصولات</h1>
+      <p class="products-header__count">
+        <span id="products-count" data-i18n="products.count">۰ محصول</span>
+      </p>
+    </div>
+
+    <div class="products-layout">
+      <aside class="products-sidebar" id="desktop-filters">
+        <div class="skeleton skeleton--block" style="height: 400px;"></div>
+      </aside>
+
+      <div class="products-main">
+        <div class="products-controls">
+          <div class="products-controls__search">
+            <input
+              type="search"
+              id="search-input"
+              class="input input--search"
+              placeholder="جستجوی محصول..."
+              data-i18n-placeholder="placeholders.searchProducts"
+            >
+          </div>
+
+          <div class="products-controls__sort">
+            <select id="sort-select" class="input">
+              <option value="newest" data-i18n="sort.newest">جدیدترین</option>
+              <option value="price-asc" data-i18n="sort.priceLowHigh">ارزان‌ترین</option>
+              <option value="price-desc" data-i18n="sort.priceHighLow">گران‌ترین</option>
+              <option value="name-asc" data-i18n="sort.nameAZ">نام (الف-ی)</option>
+            </select>
+          </div>
+
+          <button class="btn btn--secondary products-controls__filter-btn" id="mobile-filter-btn" data-i18n="common.filter">
+            فیلترها
+          </button>
+        </div>
+
+        <div id="active-filters" class="active-filters"></div>
+
+        <div id="products-grid" class="products-grid">
+          <div class="skeleton skeleton--card"></div>
+          <div class="skeleton skeleton--card"></div>
+          <div class="skeleton skeleton--card"></div>
+          <div class="skeleton skeleton--card"></div>
+          <div class="skeleton skeleton--card"></div>
+          <div class="skeleton skeleton--card"></div>
+        </div>
+
+        <div id="load-more-sentinel" class="load-more-sentinel">
+          <div class="skeleton skeleton--text" style="width: 100px;"></div>
+        </div>
+
+        <div id="empty-state" class="empty-state" hidden>
+          <div class="skeleton skeleton--block" style="height: 200px;"></div>
+        </div>
+
+        <div id="error-state" class="error-state" hidden>
+          <div class="skeleton skeleton--block" style="height: 200px;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <div class="site-footer__column">
+        <h3 data-i18n="footer.about">درباره ما</h3>
+        <p data-i18n="footer.aboutText">موبوگرام، فروشگاه آنلاین گوشی‌های موبایل با بهترین قیمت و کیفیت.</p>
+      </div>
+
+      <div class="site-footer__column">
+        <h3 data-i18n="footer.quickLinks">دسترسی سریع</h3>
+        <ul>
+          <li><a href="products.html" data-i18n="nav.products">محصولات</a></li>
+          <li><a href="brands.html" data-i18n="nav.brands">برندها</a></li>
+          <li><a href="contact.html" data-i18n="nav.contact">تماس با ما</a></li>
+        </ul>
+      </div>
+
+      <div class="site-footer__column">
+        <h3 data-i18n="footer.customerService">خدمات مشتریان</h3>
+        <ul>
+          <li><a href="faq.html" data-i18n="footer.faq">سؤالات متداول</a></li>
+          <li><a href="shipping.html" data-i18n="footer.shipping">شرایط ارسال</a></li>
+          <li><a href="returns.html" data-i18n="footer.returns">بازگشت کالا</a></li>
+        </ul>
+      </div>
+
+      <div class="site-footer__column">
+        <h3 data-i18n="footer.contact">تماس با ما</h3>
+        <p data-i18n="footer.email">ایمیل: support@mobogram.ir</p>
+        <p data-i18n="footer.phone">تلفن: ۰۲۱-۱۲۳۴۵۶۷۸</p>
+      </div>
+    </div>
+
+    <div class="site-footer__bottom">
+      <div class="container">
+        <p data-i18n="footer.copyright">© ۱۴۰۳ موبوگرام. تمامی حقوق محفوظ است.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
