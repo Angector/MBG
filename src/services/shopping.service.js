@@ -26,7 +26,7 @@ const log = createLogger('shopping.service');
 // ===== SECTION 2: Private helpers =====
 /** Get current user ID or throw AuthError. @returns {Promise<string>} */
 async function requireUserId() {
-  const {  { user }, error } = await supabase.auth.getUser();
+  const { data: { user }, error } = await supabase.auth.getUser(); // 👈 خطای سینتکس اینجا بود
   if (error || !user) throw new AuthError('Not authenticated');
   return user.id;
 }
@@ -250,15 +250,9 @@ export async function placeOrder(input) {
 
   // Decrement stock atomically (where stock >= qty)
   for (const item of input.items) {
-    const { error: stockErr, count } = await supabase
-      .from(TABLES.productVariants)
-      .update({ stock: supabase.rpc ? undefined : undefined }) // Use raw SQL via rpc if available
-      .eq('id', item.variantId)
-      .gte('stock', item.qty);
+    const { data: current, error: readErr } = await supabase
+      .from(TABLES.productVariants).select('stock').eq('id', item.variantId).single(); // 👈 اصلاح شد
 
-    // Fallback: manual decrement with read-then-write (race-prone but acceptable for MVP)
-    const {  current, error: readErr } = await supabase
-      .from(TABLES.productVariants).select('stock').eq('id', item.variantId).single();
     if (readErr || !current) {
       await markOrderFailed(order.id);
       throw new InternalError('Failed to read stock');
@@ -274,6 +268,7 @@ export async function placeOrder(input) {
       .update({ stock: current.stock - item.qty })
       .eq('id', item.variantId)
       .eq('stock', current.stock); // Optimistic lock
+
     if (updateErr) {
       await markOrderFailed(order.id);
       throw fromSupabaseError(updateErr, { resource: 'Variant' });
@@ -281,8 +276,8 @@ export async function placeOrder(input) {
   }
 
   // Fetch full order with items
-  const {  fullOrder, error: fetchErr } = await supabase
-    .from(TABLES.orders).select('*, order_items(*)').eq('id', order.id).single();
+  const { data: fullOrder, error: fetchErr } = await supabase
+    .from(TABLES.orders).select('*, order_items(*)').eq('id', order.id).single(); // 👈 اصلاح شد
   if (fetchErr) throw fromSupabaseError(fetchErr, { resource: 'Order' });
   return mapOrder(fullOrder);
 }
@@ -503,7 +498,7 @@ export async function updateSiteSettings(patch) {
 
   for (const { key, value } of updates) {
     const { error } = await supabase.from(TABLES.siteSettings)
-      .upsert({ key, value }).eq('key', key);
+      .upsert({ key, value }); // 👈 `.eq` اضافی که باعث خطا میشد حذف شد
     if (error) throw fromSupabaseError(error, { resource: 'SiteSettings' });
   }
 
@@ -524,14 +519,13 @@ export async function optimizeImage(file, opts = {}) {
   const { maxDimension = UPLOAD.maxDimension, quality = UPLOAD.webpQuality } = opts;
 
   if (typeof createImageBitmap === 'undefined' || typeof document === 'undefined') {
-    return file; // Fallback: return original
+    return file;
   }
 
   try {
     const bitmap = await createImageBitmap(file);
     let { width, height } = bitmap;
 
-    // Resize if needed
     if (width > maxDimension || height > maxDimension) {
       const ratio = Math.min(maxDimension / width, maxDimension / height);
       width = Math.round(width * ratio);
@@ -547,7 +541,6 @@ export async function optimizeImage(file, opts = {}) {
     ctx.drawImage(bitmap, 0, 0, width, height);
     bitmap.close();
 
-    // Try WebP first, fallback to JPEG
     const webpBlob = await new Promise(resolve => {
       canvas.toBlob(resolve, 'image/webp', quality);
     });
@@ -581,32 +574,27 @@ export async function uploadImage(input) {
   if (!input?.path) throw new ValidationError('Path required', { meta: { field: 'path' } });
   if (!input?.file) throw new ValidationError('File required', { meta: { field: 'file' } });
 
-  // Validate bucket
   if (!Object.values(BUCKETS).includes(input.bucket)) {
     throw new ValidationError(`Invalid bucket. Must be one of: ${Object.values(BUCKETS).join(', ')}`);
   }
 
-  // Validate file size
   if (input.file.size > UPLOAD.maxSizeBytes) {
     throw new ValidationError(`File too large. Max: ${UPLOAD.maxSizeLabel}`, {
       meta: { field: 'file', maxSize: UPLOAD.maxSizeBytes },
     });
   }
 
-  // Validate MIME type
   if (!UPLOAD.acceptedMimeTypes.includes(input.file.type)) {
     throw new ValidationError(`Invalid file type. Accepted: ${UPLOAD.acceptedMimeTypes.join(', ')}`, {
       meta: { field: 'file' },
     });
   }
 
-  // Optimize if needed
   let fileToUpload = input.file;
   if (input.optimize !== false && input.file.type.startsWith('image/')) {
     fileToUpload = await optimizeImage(input.file);
   }
 
-  // Upload
   const { data, error } = await supabase.storage
     .from(input.bucket)
     .upload(input.path, fileToUpload, {
@@ -621,7 +609,7 @@ export async function uploadImage(input) {
     throw fromSupabaseError(error, { resource: 'Storage' });
   }
 
-  const {  publicUrl } = supabase.storage.from(input.bucket).getPublicUrl(input.path);
+  const { data: { publicUrl } } = supabase.storage.from(input.bucket).getPublicUrl(input.path); // 👈 اصلاح شد
 
   return {
     bucket: input.bucket,
@@ -868,4 +856,3 @@ export async function deleteNotifyRequest(requestId) {
   
   if (error) throw fromSupabaseError(error, { resource: 'NotifyRequest' });
 }
-</replacement>

@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://mobogram.ir/">
   <meta property="og:title" content="موبوگرام - فروشگاه آنلاین گوشی موبایل">
   <meta property="og:description" content="فروشگاه آنلاین گوشی‌های موبایل با بهترین قیمت و کیفیت. خرید آسان، ارسال سریع، ضمانت اصالت کالا.">
-  <meta property="og:image" content="/assets/og-image.jpg">
+  <meta property="og:image" content="assets/og-image.jpg">
   <meta property="og:locale" content="fa_IR">
   
   <!-- Twitter -->
@@ -23,15 +23,15 @@
   <meta property="twitter:url" content="https://mobogram.ir/">
   <meta property="twitter:title" content="موبوگرام - فروشگاه آنلاین گوشی موبایل">
   <meta property="twitter:description" content="فروشگاه آنلاین گوشی‌های موبایل با بهترین قیمت و کیفیت. خرید آسان، ارسال سریع، ضمانت اصالت کالا.">
-  <meta property="twitter:image" content="/assets/og-image.jpg">
+  <meta property="twitter:image" content="assets/og-image.jpg">
   
   <!-- PWA -->
   <meta name="theme-color" content="#C8CEDF">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
   
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/assets/icons/icon-72x72.png">
+  <link rel="icon" type="image/png" href="assets/icons/icon-72x72.png">
   
   <!-- Stylesheets -->
   <link rel="stylesheet" href="styles/fonts.css">
@@ -56,13 +56,13 @@
           .from('site_settings')
           .select('value')
           .eq('key', 'maintenance_mode')
-          .single();
+          .maybeSingle(); // 👈 خطای ۴۰۶ با این درست شد
         
         if (!error && data?.value === true) {
           window.location.href = 'maintenance.html';
         }
       } catch (err) {
-        // Silently fail - don't block page load
+        // Silently fail
       }
     }
     
@@ -73,7 +73,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('./sw.js') // 👈 اسلش اول حذف شد
           .then(reg => console.log('Service Worker registered'))
           .catch(err => console.log('Service Worker registration failed:', err));
       });
