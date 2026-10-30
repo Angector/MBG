@@ -4,7 +4,7 @@
 
 // ===== SECTION: Imports & setup =====
 
-import { SITE, LOCALE_STORAGE_KEY } from './config.js';
+import { SITE, LOCALE_STORAGE_KEY, ENV } from './config.js'; // 👈 ENV اضافه شد
 import { localStorageAdapter } from './utils.js';
 
 /** @type {string} Current active locale */
@@ -23,10 +23,6 @@ const localeListeners = [];
 
 // ===== SECTION: Dictionaries =====
 
-/**
- * Flat dictionaries keyed by locale. Keys use dot-notation namespacing.
- * Placeholders use {name} syntax.
- */
 const DICTIONARIES = {
   fa: {
     // common.*
@@ -308,12 +304,6 @@ const warnedKeys = new Set();
 
 /**
  * Translate a key with {placeholder} interpolation.
- * Missing keys return `⟦key⟧` in dev, or last segment in production.
- * @param {string} key - dot-notation key
- * @param {Object<string,string|number>} [vars] - interpolation values
- * @returns {string}
- * @example t('site.tagline')
- * @example t('product.lowStock', { count: '۳' })
  */
 export function t(key, vars = {}) {
   const dict = DICTIONARIES[currentLocale];
@@ -323,12 +313,10 @@ export function t(key, vars = {}) {
     if (ENV.isDev) {
       if (!warnedKeys.has(key)) {
         warnedKeys.add(key);
-        // Deliberate console.warn — documented exception to avoid coupling with logger
         console.warn(`[i18n] Missing key: ${key}`);
       }
       return `⟦${key}⟧`;
     }
-    // Production fallback: last segment
     const parts = key.split('.');
     return parts[parts.length - 1];
   }
@@ -338,28 +326,14 @@ export function t(key, vars = {}) {
 
 // ===== SECTION: Locale management =====
 
-/**
- * Get current locale.
- * @returns {string}
- */
 export function getLocale() {
   return currentLocale;
 }
 
-/**
- * Check if locale is supported.
- * @param {string} locale
- * @returns {boolean}
- */
 export function isSupported(locale) {
   return SITE.supportedLocales.includes(locale);
 }
 
-/**
- * Set current locale. Persists, updates <html>, dispatches event.
- * @param {string} locale
- * @throws {Error} if locale is not supported
- */
 export function setLocale(locale) {
   if (!isSupported(locale)) {
     throw new Error(`Unsupported locale: ${locale}`);
@@ -380,11 +354,6 @@ export function setLocale(locale) {
   }
 }
 
-/**
- * Subscribe to locale changes.
- * @param {(locale: string) => void} handler
- * @returns {() => void} unsubscribe function
- */
 export function onLocaleChange(handler) {
   localeListeners.push(handler);
   return () => {
@@ -393,11 +362,6 @@ export function onLocaleChange(handler) {
   };
 }
 
-/**
- * Get text direction for a locale.
- * @param {string} [locale=getLocale()]
- * @returns {'rtl'|'ltr'}
- */
 export function getDirection(locale = getLocale()) {
   const rtlLocales = ['fa', 'ar', 'he', 'ur'];
   return rtlLocales.includes(locale) ? 'rtl' : 'ltr';
@@ -405,26 +369,19 @@ export function getDirection(locale = getLocale()) {
 
 // ===== SECTION: Bulk DOM translation =====
 
-/**
- * Scan DOM subtree and apply translations. Idempotent.
- * @param {ParentNode} [root=document]
- */
 export function applyTranslations(root = document) {
   if (typeof document === 'undefined') return;
 
-  // data-i18n → textContent
   for (const el of root.querySelectorAll('[data-i18n]')) {
     const key = el.getAttribute('data-i18n');
     if (key) el.textContent = t(key);
   }
 
-  // data-i18n-html → innerHTML
   for (const el of root.querySelectorAll('[data-i18n-html]')) {
     const key = el.getAttribute('data-i18n-html');
     if (key) el.innerHTML = t(key);
   }
 
-  // data-i18n-attr → setAttribute
   for (const el of root.querySelectorAll('[data-i18n-attr]')) {
     const spec = el.getAttribute('data-i18n-attr');
     if (!spec) continue;
@@ -434,28 +391,22 @@ export function applyTranslations(root = document) {
     }
   }
 
-  // data-i18n-title
   for (const el of root.querySelectorAll('[data-i18n-title]')) {
     const key = el.getAttribute('data-i18n-title');
     if (key) el.setAttribute('title', t(key));
   }
 
-  // data-i18n-placeholder
   for (const el of root.querySelectorAll('[data-i18n-placeholder]')) {
     const key = el.getAttribute('data-i18n-placeholder');
     if (key) el.setAttribute('placeholder', t(key));
   }
 
-  // data-i18n-aria-label
   for (const el of root.querySelectorAll('[data-i18n-aria-label]')) {
     const key = el.getAttribute('data-i18n-aria-label');
     if (key) el.setAttribute('aria-label', t(key));
   }
 }
 
-/**
- * Update <html lang> and <html dir> to current locale.
- */
 export function applyDocumentLang() {
   if (typeof document === 'undefined') return;
   const html = document.documentElement;
@@ -465,23 +416,11 @@ export function applyDocumentLang() {
 
 // ===== SECTION: Helpers =====
 
-/**
- * Check if a key exists in current dictionary.
- * @param {string} key
- * @returns {boolean}
- */
 export function hasKey(key) {
   const dict = DICTIONARIES[currentLocale];
   return dict ? key in dict : false;
 }
 
-/**
- * Interpolate {placeholders} in a template string.
- * Missing vars remain as `{name}` literal in dev, empty string in prod.
- * @param {string} template
- * @param {Object<string,string|number>} vars
- * @returns {string}
- */
 export function interpolate(template, vars) {
   return template.replace(/\{(\w+)\}/g, (match, name) => {
     if (name in vars) return String(vars[name]);
@@ -489,11 +428,6 @@ export function interpolate(template, vars) {
   });
 }
 
-/**
- * List all keys under a namespace prefix.
- * @param {string} [prefix='']
- * @returns {string[]}
- */
 export function listKeys(prefix = '') {
   const dict = DICTIONARIES[currentLocale];
   if (!dict) return [];
